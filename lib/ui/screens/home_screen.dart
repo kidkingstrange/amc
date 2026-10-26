@@ -54,7 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text(
-            'CineCross: Anime & Movies',
+            'Anime and Movies Crossword',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
           ),
           actions: [

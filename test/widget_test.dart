@@ -8,7 +8,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify Title
-    expect(find.text('CineCross: Anime & Movies'), findsOneWidget);
+    expect(find.text('Anime and Movies Crossword'), findsOneWidget);
 
     // Verify Tabs
     expect(find.text('Crosswords (10)'), findsOneWidget);

@@ -1,23 +1,23 @@
-# Privacy Policy for CineCross: Anime & Movies
+# Privacy Policy for Anime and Movies Crossword
 
 > **Last Updated**: October 26, 2026  
 > **Effective Date**: October 26, 2026  
-> **Developer**: David Itoya (`CineCross Studios`)  
+> **Developer**: David Itoya (`David Itoya Studios`)  
 > **Contact Email**: `itoyadavid2@gmail.com` (or your developer contact email)
 
 ---
 
 ## 1. Introduction
-Welcome to **CineCross: Anime & Movies** ("we", "our", or "the App"). We are committed to protecting your personal privacy. CineCross is designed as a premium, privacy-first, fully offline game. 
+Welcome to **Anime and Movies Crossword** ("we", "our", or "the App"). We are committed to protecting your personal privacy. Anime and Movies Crossword is designed as a premium, privacy-first, fully offline game. 
 
 This Privacy Policy explains how our App handles user information. The short answer: **We do not collect, store, transmit, or share any personal information whatsoever.**
 
 ---
 
 ## 2. Information We Do NOT Collect
-Unlike many modern mobile games, CineCross operates 100% locally on your Android device:
+Unlike many modern mobile games, Anime and Movies Crossword operates 100% locally on your Android device:
 - **No Personal Identification Information**: We do not ask for, collect, or store your name, email address, phone number, address, or age.
-- **No Account or Authentication**: CineCross requires no registration, sign-in, or social media login.
+- **No Account or Authentication**: Anime and Movies Crossword requires no registration, sign-in, or social media login.
 - **No Device Identifiers**: We do not collect your Android Advertising ID (AAID), IMEI, MAC address, IP address, or hardware identifiers.
 - **No Location Data**: We do not request access to GPS, Wi-Fi location, or network location.
 - **No Analytics or Telemetry**: We do not include Google Analytics, Firebase Analytics, Crashlytics, Mixpanel, or any tracking SDKs.

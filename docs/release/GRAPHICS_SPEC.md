@@ -29,8 +29,8 @@
     - Screen 1: Classic Crossword grid glowing with solved yellow letter tiles.
     - Screen 2: Emoji Rebus card showing `⚔️ 👹 🚂` with letter slots below.
   - **Right Side (Typography)**:
-    - Title: **CineCross** (Font: Fredoka Bold, Color: Sunny Yellow `#FFC93C`).
-    - Subtitle: **Anime & Movies Trivia** (Font: Nunito Extra Bold, Color: Paper White `#FFF9F0`).
+    - Title: **Anime & Movies Crossword** (Font: Fredoka Bold, Color: Sunny Yellow `#FFC93C`).
+    - Subtitle: **Trivia & Word Puzzles** (Font: Nunito Extra Bold, Color: Paper White `#FFF9F0`).
     - Badges (Pills):
       - `420+ LEVELS` (Indigo Pill `#4F46E5`)
       - `100% OFFLINE` (Mint Pill `#2EC4B6`)

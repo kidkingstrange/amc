@@ -1,4 +1,4 @@
-# CineCross: Anime & Movies 🎬⚔️
+# Anime and Movies Crossword 🎬⚔️
 
 A premium, privacy-first, 100% offline word and trivia puzzle game built with Flutter for Android and iOS.
 
@@ -11,7 +11,7 @@ A premium, privacy-first, 100% offline word and trivia puzzle game built with Fl
 
 ## 🌟 Game Overview
 
-CineCross gives players an uninterrupted, ad-free mobile trivia puzzle experience celebrating the greatest anime (2016–2026) and cinema (2006–2026), including global blockbusters and acclaimed Nollywood masterpieces.
+Anime and Movies Crossword gives players an uninterrupted, ad-free mobile trivia puzzle experience celebrating the greatest anime (2016–2026) and cinema (2006–2026), including global blockbusters and acclaimed Nollywood masterpieces.
 
 ### Two Engaging Game Modes
 1. **Classic Crosswords**: Interconnected word grids with clues across character names, directors, studios, abilities, and plot trivia. Complete with pencil drafting mode, clue navigation, and letter check/reveal hints.

@@ -1,6 +1,6 @@
 # Google Play Store Listing Copy & Metadata
 
-> **Application Name**: CineCross: Anime & Movies  
+> **Application Name**: Anime and Movies Crossword  
 > **Package ID**: `com.cinecross.cinecross`  
 > **Category**: Games > Word / Trivia  
 > **Price Tier**: Premium / Paid Upfront (NGN 1,500 – 2,500 / $1.99 USD)  
@@ -10,9 +10,9 @@
 
 ## 1. Store Title & Descriptions
 
-### App Title (27 / 30 characters)
+### App Title (26 / 30 characters)
 ```text
-CineCross: Anime & Movies
+Anime and Movies Crossword
 ```
 
 ### Short Description (78 / 80 characters)
@@ -22,9 +22,9 @@ CineCross: Anime & Movies
 
 ### Full Description
 ```markdown
-Welcome to CineCross: Anime & Movies — the ultimate premium word and trivia puzzle game crafted specifically for cinephiles and anime enthusiasts!
+Welcome to Anime and Movies Crossword — the ultimate premium word and trivia puzzle game crafted specifically for cinephiles and anime enthusiasts!
 
-Tired of free-to-play word games cluttered with intrusive video ads, energy bars, forced timers, and aggressive paywalls? CineCross gives you an uninterrupted, 100% offline premium puzzle experience. Buy once, play forever.
+Tired of free-to-play word games cluttered with intrusive video ads, energy bars, forced timers, and aggressive paywalls? Anime and Movies Crossword gives you an uninterrupted, 100% offline premium puzzle experience. Buy once, play forever.
 
 🎬 TWO ENGAGING GAME MODES
 
@@ -72,7 +72,7 @@ Dive into 8 themed puzzle collections:
 ---
 
 LEGAL DISCLAIMER & ATTRIBUTION
-CineCross: Anime & Movies is an unofficial fan-made trivia game created for educational and entertainment purposes under fair use. It is not endorsed by, sponsored by, or affiliated with any movie studio, anime production committee, distributor, or television network. All trademarks, character names, and title references belong to their respective copyright holders.
+Anime and Movies Crossword is an unofficial fan-made trivia game created for educational and entertainment purposes under fair use. It is not endorsed by, sponsored by, or affiliated with any movie studio, anime production committee, distributor, or television network. All trademarks, character names, and title references belong to their respective copyright holders.
 ```
 
 ---

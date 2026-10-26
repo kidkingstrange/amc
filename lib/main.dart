@@ -27,7 +27,7 @@ class _CineCrossAppState extends State<CineCrossApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'CineCross: Anime & Movies',
+      title: 'Anime and Movies Crossword',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,

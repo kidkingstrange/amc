@@ -80,3 +80,12 @@ All key technical, product, and design decisions are logged here with rationale 
   - GitHub Actions CI/CD automation in `.github/workflows/ci.yml`.
 - **Why**: Equips the owner (David) with every asset, legal document, and operational instruction needed to publish smoothly and monetize without regulatory or platform rejections.
 - **Owner Action Required**: Confirm pricing selection and follow Play Console walkthrough.
+
+---
+
+## Decision 009: Official App Title Confirmation
+- **Date**: 2026-10-26
+- **Status**: Adopted
+- **Decision**: Finalized the official application title as **"Anime and Movies Crossword"** across all app manifests, UI headers, store listings, and legal documents.
+- **Why**: Requested by the project owner (David). At 26 characters, it fits comfortably within Google Play's strict 30-character title limit while providing high organic search discoverability for both anime and movie crossword enthusiasts.
+- **Owner Action Required**: Approved by Owner.

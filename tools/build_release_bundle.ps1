@@ -1,8 +1,8 @@
-# CineCross: Anime & Movies - Release Build Helper Script for Windows
+# Anime and Movies Crossword - Release Build Helper Script for Windows
 # Run this script by right-clicking and selecting "Run with PowerShell" or executing in terminal.
 
 Write-Host "==========================================================" -ForegroundColor Cyan
-Write-Host "  CineCross: Anime & Movies - Android Release Builder     " -ForegroundColor Yellow
+Write-Host "  Anime and Movies Crossword - Android Release Builder    " -ForegroundColor Yellow
 Write-Host "==========================================================" -ForegroundColor Cyan
 Write-Host ""
 
