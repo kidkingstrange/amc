@@ -1,4 +1,4 @@
-name: CineCross CI
+name: Anime and Movies Crossword CI
 
 on:
   push:
@@ -38,5 +38,20 @@ jobs:
       - name: Run Test Suite
         run: flutter test --coverage
 
-      - name: Build Android Release AAB (Unsigned CI check)
+      - name: Build Android Release AAB (Google Play Store)
         run: flutter build appbundle --release --no-pub
+
+      - name: Build Android Release APK (Direct Phone Install)
+        run: flutter build apk --release --no-pub
+
+      - name: Upload Installable APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: anime-and-movies-crossword-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Upload Google Play AAB Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: anime-and-movies-crossword-aab
+          path: build/app/outputs/bundle/release/app-release.aab
