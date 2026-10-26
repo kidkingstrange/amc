@@ -81,3 +81,16 @@ Tracking all major activities across agent roles.
 - **Role**: Release Manager & Flutter Engineer
 - **Action**: Renamed application to "Anime and Movies Crossword" across `AndroidManifest.xml`, UI headers (`home_screen.dart`, `main.dart`), test suites (`widget_test.dart`), and store listing documentation.
 - **Status**: Completed and verified with test suite.
+
+---
+
+### 2026-10-26: Core Gameplay Upgrades & Device Feedback Implementation
+- **Role**: Flutter Engineer & UI/UX Designer
+- **Action**:
+  - Implemented phone native keyboard integration for both Crossword and Rebus modes with automatic focus and toggle.
+  - Added word locking system: solved words lock in place with mint-green tiles and checkmark indicators.
+  - Implemented real-time audio, haptic, and visual feedback for right (+50 PTS celebration) and wrong attempts.
+  - Added full Points Allocation System (+50 PTS/word, +100 PTS/rebus, +200 PTS level bonus) with gold coin counter.
+  - Hidden emoji rebus titles on level list and game screen to prevent answer spoilers.
+  - Fixed Android navigation bar overlay with `SafeArea(bottom: true)` across all screens.
+- **Status**: Tested, verified (`flutter analyze` clean, all 23 tests pass), and pushed to GitHub.

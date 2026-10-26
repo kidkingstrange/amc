@@ -89,3 +89,17 @@ All key technical, product, and design decisions are logged here with rationale 
 - **Decision**: Finalized the official application title as **"Anime and Movies Crossword"** across all app manifests, UI headers, store listings, and legal documents.
 - **Why**: Requested by the project owner (David). At 26 characters, it fits comfortably within Google Play's strict 30-character title limit while providing high organic search discoverability for both anime and movie crossword enthusiasts.
 - **Owner Action Required**: Approved by Owner.
+
+---
+
+## Decision 010: Native Phone Keyboard, Word Locking, Points Economy & UI Polish
+- **Date**: 2026-10-26
+- **Status**: Adopted
+- **Decision**: Implemented 5 major gameplay and system enhancements based on device testing feedback:
+  1. **Native Phone Keyboard**: Replaced custom on-screen keyboard with device's native software keyboard (Gboard/Samsung/Apple) with automatic focus and keyboard toggle.
+  2. **Word Locking & Correct/Wrong Feedback**: When a word is solved correctly, cells turn mint green, show a checkmark, and lock permanently in place with haptic/chime celebration. Wrong attempts trigger error haptic feedback and visual alerts.
+  3. **Points Allocation System**: Implemented in-game point reward economy (+50 PTS per solved word, +100 PTS per rebus, +200 PTS level completion bonus) tracked in `GameStorage` and displayed as a gold coin badge `🪙 PTS`.
+  4. **Hidden Rebus Titles**: Unsolved emoji rebus puzzles now hide title spoilers completely in the level list and screen header (displaying `"Level X • Rebus"`), only revealing the title and trivia explanation upon successful solve.
+  5. **System Navigation Bar Padding**: Wrapped screens in `SafeArea(bottom: true)` and enabled `resizeToAvoidBottomInset: true` to ensure Android system navigation buttons permanently sit below the app without overlapping.
+- **Why**: Dramatically improves tactile gameplay feel, prevents title spoilers, adds gamified reward progression, and fixes device system bar overlap.
+- **Owner Action Required**: Test the updated APK on device.
