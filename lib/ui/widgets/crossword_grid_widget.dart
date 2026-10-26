@@ -7,11 +7,13 @@ import '../theme.dart';
 class CrosswordGridWidget extends StatelessWidget {
   final CrosswordEngine engine;
   final VoidCallback onStateChanged;
+  final VoidCallback? onTapCell;
 
   const CrosswordGridWidget({
     super.key,
     required this.engine,
     required this.onStateChanged,
+    this.onTapCell,
   });
 
   @override
@@ -72,6 +74,8 @@ class CrosswordGridWidget extends StatelessWidget {
       cellBg = AppColors.cellError;
     } else if (isSelected) {
       cellBg = isDark ? const Color(0xFF3730A3) : AppColors.cellSelectedLight;
+    } else if (cell.isLocked) {
+      cellBg = isDark ? const Color(0xFF064E3B) : const Color(0xFFD1FAE5);
     } else if (isInActiveWord) {
       cellBg = isDark ? AppColors.nightCellActive : AppColors.cellActiveLight;
     } else {
@@ -82,6 +86,7 @@ class CrosswordGridWidget extends StatelessWidget {
       onTap: () {
         engine.selectCell(r, c);
         onStateChanged();
+        onTapCell?.call();
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
@@ -92,8 +97,12 @@ class CrosswordGridWidget extends StatelessWidget {
           border: Border.all(
             color: isSelected
                 ? AppColors.primary
-                : (isDark ? Colors.white12 : const Color(0xFFCBD5E1)),
-            width: isSelected ? 2.5 : 1.0,
+                : cell.isError
+                    ? AppColors.coral
+                    : cell.isLocked
+                        ? AppColors.mint
+                        : (isDark ? Colors.white12 : const Color(0xFFCBD5E1)),
+            width: isSelected ? 2.5 : (cell.isLocked ? 1.5 : 1.0),
           ),
         ),
         child: Stack(
@@ -112,6 +121,17 @@ class CrosswordGridWidget extends StatelessWidget {
                   ),
                 ),
               ),
+            // Locked check indicator in top-right
+            if (cell.isLocked)
+              const Positioned(
+                top: 2,
+                right: 3,
+                child: Icon(
+                  Icons.check,
+                  size: 10,
+                  color: AppColors.mint,
+                ),
+              ),
             // Entered Guess Letter
             Center(
               child: Text(
@@ -119,9 +139,11 @@ class CrosswordGridWidget extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: cell.isPencil
-                      ? (isDark ? Colors.white38 : Colors.black38)
-                      : (isDark ? Colors.white : AppColors.ink),
+                  color: cell.isLocked
+                      ? (isDark ? Colors.white : const Color(0xFF065F46))
+                      : cell.isPencil
+                          ? (isDark ? Colors.white38 : Colors.black38)
+                          : (isDark ? Colors.white : AppColors.ink),
                 ),
               ),
             ),

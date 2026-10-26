@@ -12,6 +12,7 @@ class CrosswordCell {
   String guess;
   bool isPencil;
   bool isError;
+  bool isLocked;
 
   CrosswordCell({
     required this.row,
@@ -22,12 +23,14 @@ class CrosswordCell {
     this.guess = '',
     this.isPencil = false,
     this.isError = false,
+    this.isLocked = false,
   });
 
   bool get isCorrect => guess.isNotEmpty && guess == solution;
   bool get isEmpty => guess.isEmpty;
 
   void clear() {
+    if (isLocked) return;
     guess = '';
     isPencil = false;
     isError = false;

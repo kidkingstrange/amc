@@ -13,6 +13,7 @@ class GameStorage {
     'unlockedTitles': <String>[],
     'dailyStreak': 0,
     'lastDailyDate': '',
+    'points': 0,
     'soundEnabled': true,
     'hapticsEnabled': true,
     'isDarkMode': false,
@@ -61,6 +62,15 @@ class GameStorage {
     if (titleId != null) {
       unlockTitle(titleId);
     }
+    _persist();
+  }
+
+  // Points / Score System
+  int get points => (_data['points'] as int?) ?? 0;
+
+  void addPoints(int amount) {
+    if (amount <= 0) return;
+    _data['points'] = points + amount;
     _persist();
   }
 
@@ -123,6 +133,7 @@ class GameStorage {
       'unlockedTitles': <String>[],
       'dailyStreak': 0,
       'lastDailyDate': '',
+      'points': 0,
       'soundEnabled': true,
       'hapticsEnabled': true,
       'isDarkMode': false,

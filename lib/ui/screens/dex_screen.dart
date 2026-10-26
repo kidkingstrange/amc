@@ -62,8 +62,10 @@ class _DexScreenState extends State<DexScreen> {
       appBar: AppBar(
         title: const Text('Trivia Collection (Dex)', style: TextStyle(fontWeight: FontWeight.bold)),
       ),
-      body: Column(
-        children: [
+      body: SafeArea(
+        bottom: true,
+        child: Column(
+          children: [
           // Progress Header
           Container(
             padding: const EdgeInsets.all(16),
@@ -142,6 +144,7 @@ class _DexScreenState extends State<DexScreen> {
             ),
           ),
         ],
+      ),
       ),
     );
   }

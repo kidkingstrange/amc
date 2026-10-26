@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../engine/crossword_engine.dart';
 import '../../engine/crossword_models.dart';
+import '../../services/game_storage.dart';
 import '../theme.dart';
 import '../widgets/crossword_grid_widget.dart';
-import '../widgets/keyboard_widget.dart';
 
 class CrosswordScreen extends StatefulWidget {
   final String levelId;
@@ -23,13 +23,25 @@ class CrosswordScreen extends StatefulWidget {
 }
 
 class _CrosswordScreenState extends State<CrosswordScreen> {
+  final storage = GameStorage();
   CrosswordEngine? _engine;
   bool _isLoading = true;
+
+  final FocusNode _focusNode = FocusNode();
+  final TextEditingController _textController = TextEditingController(text: ' ');
+  int _earnedPointsInLevel = 0;
 
   @override
   void initState() {
     super.initState();
     _loadPuzzle();
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    _textController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadPuzzle() async {
@@ -42,15 +54,70 @@ class _CrosswordScreenState extends State<CrosswordScreen> {
       _engine = CrosswordEngine(puzzle);
       _isLoading = false;
     });
+
+    // Auto-focus native keyboard on load
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _focusNode.requestFocus();
+    });
+  }
+
+  void _handleNativeKeyboardInput(String val) {
+    if (_engine == null) return;
+
+    if (val.isEmpty) {
+      // Backspace was pressed on native keyboard
+      _onBackspace();
+      _textController.text = ' ';
+      return;
+    }
+
+    if (val.length > 1) {
+      // A character was entered
+      final char = val.substring(1).trim().toUpperCase();
+      if (char.isNotEmpty) {
+        _onLetter(char);
+      }
+      _textController.text = ' ';
+    }
   }
 
   void _onLetter(String letter) {
     if (_engine == null) return;
-    setState(() {
-      _engine!.enterLetter(letter);
-    });
+
+    final feedback = _engine!.enterLetter(letter);
+    setState(() {});
+
+    if (feedback == WordFeedback.wordCorrect) {
+      _earnedPointsInLevel += 50;
+      storage.addPoints(50);
+      if (storage.hapticsEnabled) HapticFeedback.mediumImpact();
+      if (storage.soundEnabled) SystemSound.play(SystemSoundType.click);
+
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('🎉 Word Solved! +50 PTS (Locked in place)', style: TextStyle(fontWeight: FontWeight.bold)),
+          duration: Duration(milliseconds: 1400),
+          backgroundColor: AppColors.mint,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } else if (feedback == WordFeedback.wordWrong) {
+      if (storage.hapticsEnabled) HapticFeedback.heavyImpact();
+
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('❌ Not quite right! Check your letters', style: TextStyle(fontWeight: FontWeight.bold)),
+          duration: Duration(milliseconds: 1200),
+          backgroundColor: AppColors.coral,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+
     if (_engine!.isCompleted) {
-      _showWinDialog();
+      _onLevelCompleted();
     }
   }
 
@@ -68,6 +135,15 @@ class _CrosswordScreenState extends State<CrosswordScreen> {
     });
   }
 
+  void _onLevelCompleted() {
+    const levelBonus = 200;
+    _earnedPointsInLevel += levelBonus;
+    storage.addPoints(levelBonus);
+    if (storage.hapticsEnabled) HapticFeedback.mediumImpact();
+
+    _showWinDialog();
+  }
+
   void _showWinDialog() {
     showDialog(
       context: context,
@@ -77,7 +153,7 @@ class _CrosswordScreenState extends State<CrosswordScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Row(
           children: [
-            Text('🎉', style: TextStyle(fontSize: 28)),
+            Text('🏆', style: TextStyle(fontSize: 28)),
             SizedBox(width: 8),
             Text('Puzzle Solved!', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.ink)),
           ],
@@ -97,8 +173,30 @@ class _CrosswordScreenState extends State<CrosswordScreen> {
               }),
             ),
             const SizedBox(height: 16),
-            Text('Mistakes: ${_engine!.mistakesCount}', style: const TextStyle(fontSize: 16)),
-            Text('Hints Used: ${_engine!.hintsUsed}', style: const TextStyle(fontSize: 16)),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF0FDF4),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.mint, width: 1.5),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('🪙', style: TextStyle(fontSize: 22)),
+                  const SizedBox(width: 8),
+                  Text(
+                    '+$_earnedPointsInLevel PTS EARNED!',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF065F46)),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text('Total Balance: ${storage.points} PTS', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            const SizedBox(height: 6),
+            Text('Mistakes: ${_engine!.mistakesCount}', style: const TextStyle(fontSize: 14, color: Colors.black87)),
+            Text('Hints Used: ${_engine!.hintsUsed}', style: const TextStyle(fontSize: 14, color: Colors.black87)),
           ],
         ),
         actions: [
@@ -131,9 +229,31 @@ class _CrosswordScreenState extends State<CrosswordScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: Text(widget.levelName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         actions: [
+          // Points Counter
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.yellow.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.yellow, width: 1.5),
+            ),
+            child: Row(
+              children: [
+                const Text('🪙', style: TextStyle(fontSize: 14)),
+                const SizedBox(width: 4),
+                Text(
+                  '${storage.points}',
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.ink),
+                ),
+              ],
+            ),
+          ),
+          // Reveal Hint Button
           IconButton(
             icon: const Icon(Icons.lightbulb_outline),
             tooltip: 'Reveal Letter Hint',
@@ -141,79 +261,166 @@ class _CrosswordScreenState extends State<CrosswordScreen> {
               setState(() {
                 _engine!.revealActiveLetter();
               });
-              if (_engine!.isCompleted) _showWinDialog();
+              if (_engine!.isCompleted) _onLevelCompleted();
             },
           ),
         ],
       ),
       body: SafeArea(
+        bottom: true,
         child: Column(
           children: [
+            // Hidden TextField to capture phone's native keyboard input
+            SizedBox(
+              width: 0,
+              height: 0,
+              child: TextField(
+                focusNode: _focusNode,
+                controller: _textController,
+                keyboardType: TextInputType.text,
+                textCapitalization: TextCapitalization.characters,
+                autocorrect: false,
+                enableSuggestions: false,
+                showCursor: false,
+                onChanged: _handleNativeKeyboardInput,
+              ),
+            ),
             // Crossword Grid
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
                 child: Center(
                   child: CrosswordGridWidget(
                     engine: _engine!,
                     onStateChanged: () => setState(() {}),
+                    onTapCell: () => _focusNode.requestFocus(),
                   ),
                 ),
               ),
             ),
-            // Clue Navigation Bar pinned above keyboard
+            // Clue Bar & Native Keyboard Controls pinned above system keyboard
             Container(
-              margin: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+              margin: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
+              padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
               decoration: BoxDecoration(
                 color: isDark ? AppColors.nightSurface : Colors.white,
-                borderRadius: BorderRadius.circular(12.0),
-                border: Border.all(color: Colors.black12),
+                borderRadius: BorderRadius.circular(14.0),
+                boxShadow: const [
+                  BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2)),
+                ],
+                border: Border.all(
+                  color: (activeWord != null && _engine!.isWordLocked(activeWord))
+                      ? AppColors.mint
+                      : (isDark ? Colors.white12 : Colors.black12),
+                  width: (activeWord != null && _engine!.isWordLocked(activeWord)) ? 2.0 : 1.0,
+                ),
               ),
-              child: Row(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.chevron_left),
-                    onPressed: () => setState(() => _engine!.prevClue()),
-                  ),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (activeWord != null)
-                          Text(
-                            '${activeWord.number} ${activeWord.direction == ClueDirection.across ? "ACROSS" : "DOWN"}',
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.chevron_left),
+                        onPressed: () {
+                          setState(() => _engine!.prevClue());
+                          _focusNode.requestFocus();
+                        },
+                      ),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (activeWord != null)
+                              Row(
+                                children: [
+                                  Text(
+                                    '${activeWord.number} ${activeWord.direction == ClueDirection.across ? "ACROSS" : "DOWN"}',
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                  if (_engine!.isWordLocked(activeWord)) ...[
+                                    const SizedBox(width: 6),
+                                    const Icon(Icons.lock, size: 12, color: AppColors.mint),
+                                    const SizedBox(width: 2),
+                                    const Text(
+                                      'SOLVED',
+                                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.mint),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            Text(
+                              activeWord?.clue ?? 'Tap any cell to start typing',
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                          ),
-                        Text(
-                          activeWord?.clue ?? 'Select a cell',
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.chevron_right),
+                        onPressed: () {
+                          setState(() => _engine!.nextClue());
+                          _focusNode.requestFocus();
+                        },
+                      ),
+                    ],
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.chevron_right),
-                    onPressed: () => setState(() => _engine!.nextClue()),
+                  const Divider(height: 8),
+                  // Control Buttons: Pencil Mode, Check, Keyboard Toggle
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      // Pencil Mode
+                      TextButton.icon(
+                        style: TextButton.styleFrom(
+                          foregroundColor: _engine!.isPencilMode ? AppColors.yellow : (isDark ? Colors.white70 : Colors.black54),
+                        ),
+                        icon: Icon(_engine!.isPencilMode ? Icons.edit : Icons.edit_outlined, size: 18),
+                        label: Text(_engine!.isPencilMode ? 'Pencil ON' : 'Pencil', style: const TextStyle(fontSize: 12)),
+                        onPressed: _onPencil,
+                      ),
+                      // Check Letter
+                      TextButton.icon(
+                        style: TextButton.styleFrom(foregroundColor: AppColors.primary),
+                        icon: const Icon(Icons.spellcheck, size: 18),
+                        label: const Text('Check', style: TextStyle(fontSize: 12)),
+                        onPressed: () {
+                          final ok = _engine!.checkActiveLetter();
+                          setState(() {});
+                          if (ok) {
+                            if (storage.hapticsEnabled) HapticFeedback.lightImpact();
+                          } else {
+                            if (storage.hapticsEnabled) HapticFeedback.heavyImpact();
+                          }
+                        },
+                      ),
+                      // Keyboard Toggle
+                      TextButton.icon(
+                        style: TextButton.styleFrom(foregroundColor: AppColors.primary),
+                        icon: Icon(_focusNode.hasFocus ? Icons.keyboard_hide : Icons.keyboard, size: 18),
+                        label: Text(_focusNode.hasFocus ? 'Hide Keybd' : 'Show Keybd', style: const TextStyle(fontSize: 12)),
+                        onPressed: () {
+                          if (_focusNode.hasFocus) {
+                            _focusNode.unfocus();
+                          } else {
+                            _focusNode.requestFocus();
+                          }
+                          setState(() {});
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ),
-            // Custom In-App Keyboard
-            InAppKeyboardWidget(
-              onKeyPressed: _onLetter,
-              onBackspace: _onBackspace,
-              onPencilToggle: _onPencil,
-              isPencilMode: _engine!.isPencilMode,
             ),
           ],
         ),

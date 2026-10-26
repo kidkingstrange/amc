@@ -26,8 +26,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
       appBar: AppBar(
         title: const Text('Settings & About', style: TextStyle(fontWeight: FontWeight.bold)),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16.0),
+      body: SafeArea(
+        bottom: true,
+        child: ListView(
+          padding: const EdgeInsets.all(16.0),
         children: [
           // Audio & Tactile Section
           const Text('PREFERENCES', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.black54)),
@@ -143,6 +145,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: const Text('Reset Saved Progress'),
           ),
         ],
+      ),
       ),
     );
   }

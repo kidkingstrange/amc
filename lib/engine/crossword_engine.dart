@@ -1,6 +1,8 @@
 // lib/engine/crossword_engine.dart
 import 'crossword_models.dart';
 
+enum WordFeedback { none, wordCorrect, wordWrong }
+
 class CrosswordEngine {
   final CrosswordPuzzle puzzle;
 
@@ -13,6 +15,8 @@ class CrosswordEngine {
   int mistakesCount = 0;
   int timerSeconds = 0;
   bool isCompleted = false;
+
+  final Set<String> _lockedWords = {};
 
   CrosswordEngine(this.puzzle) {
     _initFirstSelection();
@@ -47,24 +51,6 @@ class CrosswordEngine {
         }
       }
     }
-    // Fallback if no matching word in current direction: find other direction word for cell
-    for (final w in puzzle.words) {
-      if (w.direction != activeDirection) {
-        if (w.direction == ClueDirection.across) {
-          if (w.row == selectedRow &&
-              selectedCol >= w.col &&
-              selectedCol < w.col + w.length) {
-            return w;
-          }
-        } else {
-          if (w.col == selectedCol &&
-              selectedRow >= w.row &&
-              selectedRow < w.row + w.length) {
-            return w;
-          }
-        }
-      }
-    }
     return null;
   }
 
@@ -73,12 +59,10 @@ class CrosswordEngine {
     if (puzzle.grid[r][c].isBlocked) return;
 
     if (selectedRow == r && selectedCol == c) {
-      // Toggle direction if cell supports both across and down
       _toggleDirectionIfPossible();
     } else {
       selectedRow = r;
       selectedCol = c;
-      // Ensure activeDirection is valid for this new cell
       _ensureValidDirectionForCell();
     }
   }
@@ -115,7 +99,6 @@ class CrosswordEngine {
   }
 
   void _ensureValidDirectionForCell() {
-    // If active direction does not pass through this cell, switch direction
     if (activeWord == null) {
       activeDirection = activeDirection == ClueDirection.across
           ? ClueDirection.down
@@ -123,39 +106,130 @@ class CrosswordEngine {
     }
   }
 
-  void enterLetter(String rawLetter) {
-    if (isCompleted) return;
-    if (selectedCell.isBlocked) return;
+  bool isWordLocked(CrosswordWord word) {
+    return _lockedWords.contains('${word.number}_${word.direction.name}');
+  }
+
+  int get solvedWordsCount => _lockedWords.length;
+
+  bool _isWordCompletelyFilled(CrosswordWord word) {
+    for (int i = 0; i < word.length; i++) {
+      final r = word.direction == ClueDirection.across ? word.row : word.row + i;
+      final c = word.direction == ClueDirection.across ? word.col + i : word.col;
+      if (puzzle.grid[r][c].guess.isEmpty) return false;
+    }
+    return true;
+  }
+
+  bool _isWordCompletelyCorrect(CrosswordWord word) {
+    for (int i = 0; i < word.length; i++) {
+      final r = word.direction == ClueDirection.across ? word.row : word.row + i;
+      final c = word.direction == ClueDirection.across ? word.col + i : word.col;
+      final cell = puzzle.grid[r][c];
+      if (cell.guess != cell.solution) return false;
+    }
+    return true;
+  }
+
+  void _lockWord(CrosswordWord word) {
+    _lockedWords.add('${word.number}_${word.direction.name}');
+    for (int i = 0; i < word.length; i++) {
+      final r = word.direction == ClueDirection.across ? word.row : word.row + i;
+      final c = word.direction == ClueDirection.across ? word.col + i : word.col;
+      final cell = puzzle.grid[r][c];
+      cell.isLocked = true;
+      cell.isError = false;
+      cell.isPencil = false;
+    }
+  }
+
+  void _markWordErrors(CrosswordWord word) {
+    mistakesCount++;
+    for (int i = 0; i < word.length; i++) {
+      final r = word.direction == ClueDirection.across ? word.row : word.row + i;
+      final c = word.direction == ClueDirection.across ? word.col + i : word.col;
+      final cell = puzzle.grid[r][c];
+      if (!cell.isLocked && cell.guess != cell.solution) {
+        cell.isError = true;
+      }
+    }
+  }
+
+  void _advanceToNextUnsolvedWord() {
+    for (final w in puzzle.words) {
+      if (!isWordLocked(w)) {
+        selectedRow = w.row;
+        selectedCol = w.col;
+        activeDirection = w.direction;
+        while (selectedCell.isLocked && !_isAtEndOfWord(w)) {
+          _advanceAlongCurrentWord();
+        }
+        break;
+      }
+    }
+  }
+
+  bool _isAtEndOfWord(CrosswordWord w) {
+    if (w.direction == ClueDirection.across) {
+      return selectedCol >= w.col + w.length - 1;
+    } else {
+      return selectedRow >= w.row + w.length - 1;
+    }
+  }
+
+  WordFeedback enterLetter(String rawLetter) {
+    if (isCompleted) return WordFeedback.none;
+    if (selectedCell.isBlocked) return WordFeedback.none;
 
     final letter = rawLetter.trim().toUpperCase();
-    if (letter.isEmpty) return;
+    if (letter.isEmpty) return WordFeedback.none;
 
-    if (isPencilMode) {
-      selectedCell.guess = letter;
-      selectedCell.isPencil = true;
-      selectedCell.isError = false;
-    } else {
-      selectedCell.guess = letter;
-      selectedCell.isPencil = false;
-      selectedCell.isError = false;
+    if (!selectedCell.isLocked) {
+      if (isPencilMode) {
+        selectedCell.guess = letter;
+        selectedCell.isPencil = true;
+        selectedCell.isError = false;
+      } else {
+        selectedCell.guess = letter;
+        selectedCell.isPencil = false;
+        selectedCell.isError = false;
+      }
     }
 
-    // Auto-advance to next cell in current word
+    // Auto-advance to next unlocked cell along current word
     _advanceAlongCurrentWord();
 
-    // Check completion
+    // Check if the current word just became completely filled
+    WordFeedback feedback = WordFeedback.none;
+    final currentWord = activeWord;
+    if (currentWord != null && !isWordLocked(currentWord)) {
+      if (_isWordCompletelyFilled(currentWord)) {
+        if (_isWordCompletelyCorrect(currentWord)) {
+          _lockWord(currentWord);
+          feedback = WordFeedback.wordCorrect;
+          _advanceToNextUnsolvedWord();
+        } else {
+          _markWordErrors(currentWord);
+          feedback = WordFeedback.wordWrong;
+        }
+      }
+    }
+
     _checkPuzzleCompletion();
+    return feedback;
   }
 
   void backspace() {
     if (isCompleted) return;
     if (selectedCell.isBlocked) return;
 
-    if (selectedCell.guess.isNotEmpty) {
+    if (!selectedCell.isLocked && selectedCell.guess.isNotEmpty) {
       selectedCell.clear();
     } else {
       _retreatAlongCurrentWord();
-      selectedCell.clear();
+      if (!selectedCell.isLocked) {
+        selectedCell.clear();
+      }
     }
   }
 
@@ -164,14 +238,24 @@ class CrosswordEngine {
     if (word == null) return;
 
     if (activeDirection == ClueDirection.across) {
-      final nextCol = selectedCol + 1;
+      int nextCol = selectedCol + 1;
+      while (nextCol < word.col + word.length &&
+          nextCol < puzzle.width &&
+          puzzle.grid[selectedRow][nextCol].isLocked) {
+        nextCol++;
+      }
       if (nextCol < word.col + word.length && nextCol < puzzle.width) {
         if (!puzzle.grid[selectedRow][nextCol].isBlocked) {
           selectedCol = nextCol;
         }
       }
     } else {
-      final nextRow = selectedRow + 1;
+      int nextRow = selectedRow + 1;
+      while (nextRow < word.row + word.length &&
+          nextRow < puzzle.height &&
+          puzzle.grid[nextRow][selectedCol].isLocked) {
+        nextRow++;
+      }
       if (nextRow < word.row + word.length && nextRow < puzzle.height) {
         if (!puzzle.grid[nextRow][selectedCol].isBlocked) {
           selectedRow = nextRow;
@@ -185,12 +269,18 @@ class CrosswordEngine {
     if (word == null) return;
 
     if (activeDirection == ClueDirection.across) {
-      final prevCol = selectedCol - 1;
+      int prevCol = selectedCol - 1;
+      while (prevCol >= word.col && puzzle.grid[selectedRow][prevCol].isLocked) {
+        prevCol--;
+      }
       if (prevCol >= word.col) {
         selectedCol = prevCol;
       }
     } else {
-      final prevRow = selectedRow - 1;
+      int prevRow = selectedRow - 1;
+      while (prevRow >= word.row && puzzle.grid[prevRow][selectedCol].isLocked) {
+        prevRow--;
+      }
       if (prevRow >= word.row) {
         selectedRow = prevRow;
       }
@@ -244,6 +334,14 @@ class CrosswordEngine {
     selectedCell.isPencil = false;
     selectedCell.isError = false;
     hintsUsed++;
+
+    final currentWord = activeWord;
+    if (currentWord != null && !isWordLocked(currentWord)) {
+      if (_isWordCompletelyFilled(currentWord) && _isWordCompletelyCorrect(currentWord)) {
+        _lockWord(currentWord);
+      }
+    }
+
     _advanceAlongCurrentWord();
     _checkPuzzleCompletion();
   }
@@ -260,7 +358,9 @@ class CrosswordEngine {
       cell.isPencil = false;
       cell.isError = false;
     }
+    _lockWord(word);
     hintsUsed += 2;
+    _advanceToNextUnsolvedWord();
     _checkPuzzleCompletion();
   }
 
