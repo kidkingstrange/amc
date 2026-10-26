@@ -219,7 +219,7 @@ class _DexScreenState extends State<DexScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: isMovie ? AppColors.coral.withOpacity(0.15) : AppColors.primary.withOpacity(0.15),
+                    color: isMovie ? AppColors.coral.withValues(alpha: 0.15) : AppColors.primary.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(

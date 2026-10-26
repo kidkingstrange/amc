@@ -4,15 +4,12 @@ import 'dart:io';
 
 void main() {
   final titlesFile = File('content/titles.json');
-  final cluesFile = File('content/clues.json');
-  if (!titlesFile.existsSync() || !cluesFile.existsSync()) {
+  if (!titlesFile.existsSync()) {
     stderr.writeln('Dataset files missing.');
     exit(1);
   }
 
   final titlesData = jsonDecode(titlesFile.readAsStringSync()) as List;
-  final cluesData = jsonDecode(cluesFile.readAsStringSync()) as List;
-  final titleMap = {for (var t in titlesData) t['id'] as String: t};
 
   final outDir = Directory('assets/puzzles/rebus');
   if (!outDir.existsSync()) outDir.createSync(recursive: true);

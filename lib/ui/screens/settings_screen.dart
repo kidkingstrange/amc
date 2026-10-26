@@ -40,7 +40,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   title: const Text('Sound Effects', style: TextStyle(fontWeight: FontWeight.bold)),
                   subtitle: const Text('Play chimes on word solved and level win'),
                   value: storage.soundEnabled,
-                  activeColor: AppColors.primary,
+                  activeThumbColor: AppColors.primary,
                   onChanged: (val) {
                     setState(() => storage.soundEnabled = val);
                   },
@@ -50,7 +50,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   title: const Text('Haptic Vibration', style: TextStyle(fontWeight: FontWeight.bold)),
                   subtitle: const Text('Tactile feedback when tapping keys and solving'),
                   value: storage.hapticsEnabled,
-                  activeColor: AppColors.primary,
+                  activeThumbColor: AppColors.primary,
                   onChanged: (val) {
                     setState(() => storage.hapticsEnabled = val);
                   },
@@ -60,7 +60,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   title: const Text('Dark Mode', style: TextStyle(fontWeight: FontWeight.bold)),
                   subtitle: const Text('Switch between Paper Light and Midnight Dark'),
                   value: storage.isDarkMode,
-                  activeColor: AppColors.primary,
+                  activeThumbColor: AppColors.primary,
                   onChanged: (val) {
                     setState(() => storage.isDarkMode = val);
                     widget.onThemeChanged();

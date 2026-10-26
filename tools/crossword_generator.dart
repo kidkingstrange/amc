@@ -268,7 +268,7 @@ void main() {
     final outFile = File('assets/puzzles/crosswords/${proto['id']}.json');
     outFile.writeAsStringSync(jsonEncode(puzzleJson));
     generated++;
-    stdout.writeln('Generated ${proto['id']}: "${proto['name']}" (${builder.placedWords.length} words placed on ${size}x${size} grid)');
+    stdout.writeln('Generated ${proto['id']}: "${proto['name']}" (${builder.placedWords.length} words placed on $size x $size grid)');
   }
 
   stdout.writeln('\nSuccessfully generated $generated prototype crosswords in assets/puzzles/crosswords/');
