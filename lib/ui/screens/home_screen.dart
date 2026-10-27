@@ -103,10 +103,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
-            // Dex Button
+            // Trophy Room & Dex Button
             IconButton(
-              icon: const Icon(Icons.menu_book_outlined),
-              tooltip: 'Trivia Collection (Dex)',
+              icon: const Icon(Icons.emoji_events_outlined),
+              tooltip: 'Trophy Room & Trivia Dex',
               onPressed: () {
                 Navigator.push(context, MaterialPageRoute(builder: (_) => const DexScreen())).then((_) => setState(() {}));
               },
@@ -216,7 +216,59 @@ class _HomeScreenState extends State<HomeScreen> {
         final item = crosswords[i];
         final isMovie = item['cat'] == 'Movies';
         final stars = storage.getStars(item['id']!);
+        // Sequential level unlock rule: Level 1 is always unlocked. Next level unlocked if previous has at least 1 star.
+        final bool isUnlocked = i == 0 || storage.getStars(crosswords[i - 1]['id']!) > 0;
 
+        if (!isUnlocked) {
+          // Locked Level Card
+          return Card(
+            margin: const EdgeInsets.symmetric(vertical: 5),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            color: isDark ? const Color(0xFF131728) : const Color(0xFFF1F5F9),
+            elevation: 0,
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              leading: CircleAvatar(
+                backgroundColor: isDark ? Colors.white12 : Colors.black12,
+                foregroundColor: isDark ? Colors.white38 : Colors.black38,
+                child: const Icon(Icons.lock, size: 18),
+              ),
+              title: Text(
+                'Level ${i + 1}',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                  color: isDark ? Colors.white38 : Colors.black38,
+                ),
+              ),
+              subtitle: Text(
+                '🔒 Complete Level $i to unlock',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isDark ? Colors.white30 : Colors.black38,
+                ),
+              ),
+              trailing: Icon(
+                Icons.lock_outline,
+                color: isDark ? Colors.white24 : Colors.black26,
+                size: 22,
+              ),
+              onTap: () {
+                ScaffoldMessenger.of(context).clearSnackBars();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('🔒 Complete Level $i to unlock Level ${i + 1}!', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    duration: const Duration(seconds: 1),
+                    behavior: SnackBarBehavior.floating,
+                    backgroundColor: AppColors.primary,
+                  ),
+                );
+              },
+            ),
+          );
+        }
+
+        // Unlocked Level Card
         return Card(
           margin: const EdgeInsets.symmetric(vertical: 5),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -227,7 +279,7 @@ class _HomeScreenState extends State<HomeScreen> {
               foregroundColor: Colors.white,
               child: Text('${i + 1}', style: const TextStyle(fontWeight: FontWeight.bold)),
             ),
-            title: Text(item['name']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+            title: Text('Level ${i + 1}: ${item['name']}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
             subtitle: Row(
               children: [
                 Text('${item['cat']} • ${item['diff']}'),
@@ -238,12 +290,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
               ],
             ),
-            trailing: const Icon(Icons.play_arrow_rounded, color: AppColors.primary, size: 28),
+            trailing: Icon(
+              stars > 0 ? Icons.check_circle_outline_rounded : Icons.play_arrow_rounded,
+              color: stars > 0 ? AppColors.mint : AppColors.primary,
+              size: 28,
+            ),
             onTap: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => CrosswordScreen(levelId: item['id']!, levelName: item['name']!),
+                  builder: (_) => CrosswordScreen(levelId: item['id']!, levelName: 'Level ${i + 1}: ${item['name']}'),
                 ),
               ).then((_) {
                 storage.saveLevelResult(item['id']!, 3, titleId: item['titleId']);
@@ -264,14 +320,61 @@ class _HomeScreenState extends State<HomeScreen> {
         final item = rebuses[i];
         final stars = storage.getStars(item['id']!);
         final isSolved = stars > 0;
+        // Sequential level unlock rule: Level 1 is always unlocked. Next level unlocked if previous has at least 1 star.
+        final bool isUnlocked = i == 0 || storage.getStars(rebuses[i - 1]['id']!) > 0;
 
+        if (!isUnlocked) {
+          // Locked Rebus Card
+          return Card(
+            margin: const EdgeInsets.symmetric(vertical: 5),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            color: isDark ? const Color(0xFF131728) : const Color(0xFFF1F5F9),
+            elevation: 0,
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              leading: const Text('🔒', style: TextStyle(fontSize: 22)),
+              title: Text(
+                'Level ${i + 1}',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                  color: isDark ? Colors.white38 : Colors.black38,
+                ),
+              ),
+              subtitle: Text(
+                '🔒 Complete Level $i to unlock',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isDark ? Colors.white30 : Colors.black38,
+                ),
+              ),
+              trailing: Icon(
+                Icons.lock_outline,
+                color: isDark ? Colors.white24 : Colors.black26,
+                size: 22,
+              ),
+              onTap: () {
+                ScaffoldMessenger.of(context).clearSnackBars();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('🔒 Complete Level $i to unlock Level ${i + 1}!', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    duration: const Duration(seconds: 1),
+                    behavior: SnackBarBehavior.floating,
+                    backgroundColor: AppColors.primary,
+                  ),
+                );
+              },
+            ),
+          );
+        }
+
+        // Unlocked Rebus Card
         return Card(
           margin: const EdgeInsets.symmetric(vertical: 5),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           child: ListTile(
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             leading: Text(item['emojis']!, style: const TextStyle(fontSize: 22)),
-            // If unsolved, do not spoil title! Show Level number and category
             title: Text(
               isSolved ? 'Level ${i + 1}: ${item['name']}' : 'Level ${i + 1}',
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
@@ -286,7 +389,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
               ],
             ),
-            trailing: const Icon(Icons.play_arrow_rounded, color: AppColors.primary, size: 28),
+            trailing: Icon(
+              stars > 0 ? Icons.check_circle_outline_rounded : Icons.play_arrow_rounded,
+              color: stars > 0 ? AppColors.mint : AppColors.primary,
+              size: 28,
+            ),
             onTap: () {
               Navigator.push(
                 context,
