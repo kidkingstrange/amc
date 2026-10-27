@@ -53,6 +53,25 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    final totalCrosswords = crosswords.length;
+    final totalRebus = rebuses.length;
+    final totalLevels = totalCrosswords + totalRebus;
+
+    final completedCrosswords = crosswords.where((cw) => storage.getStars(cw['id']!) > 0).length;
+    final completedRebus = rebuses.where((r) => storage.getStars(r['id']!) > 0).length;
+    final totalCompleted = completedCrosswords + completedRebus;
+
+    int totalStars = 0;
+    for (final cw in crosswords) {
+      totalStars += storage.getStars(cw['id']!);
+    }
+    for (final r in rebuses) {
+      totalStars += storage.getStars(r['id']!);
+    }
+    final maxStars = totalLevels * 3;
+    final double progress = totalLevels > 0 ? (totalCompleted / totalLevels).clamp(0.0, 1.0) : 0.0;
+    final int progressPercent = (progress * 100).toInt();
+
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -139,35 +158,51 @@ class _HomeScreenState extends State<HomeScreen> {
           bottom: true,
           child: Column(
             children: [
+              // Overall Game Completion Progress Bar Card
+              _buildOverallProgressCard(
+                context: context,
+                isDark: isDark,
+                progress: progress,
+                progressPercent: progressPercent,
+                totalCompleted: totalCompleted,
+                totalLevels: totalLevels,
+                totalStars: totalStars,
+                maxStars: maxStars,
+                completedCrosswords: completedCrosswords,
+                totalCrosswords: totalCrosswords,
+                completedRebus: completedRebus,
+                totalRebus: totalRebus,
+              ),
+
               // Daily Challenge Highlight Banner
               Container(
-                margin: const EdgeInsets.all(12),
-                padding: const EdgeInsets.all(14),
+                margin: const EdgeInsets.fromLTRB(12, 4, 12, 6),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [AppColors.primary, Color(0xFF6366F1)],
                   ),
                   borderRadius: BorderRadius.circular(16),
-                  boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 2))],
+                  boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2))],
                 ),
                 child: Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(10),
+                      padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
                         shape: BoxShape.circle,
                       ),
-                      child: const Text('✨', style: TextStyle(fontSize: 22)),
+                      child: const Text('✨', style: TextStyle(fontSize: 20)),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 10),
                     const Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('DAILY CHALLENGE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white70, letterSpacing: 1.2)),
+                          Text('DAILY CHALLENGE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white70, letterSpacing: 1.1)),
                           SizedBox(height: 2),
-                          Text('Level 1: Demon & Sorcery', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                          Text('Level 1: Demon & Sorcery', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
                         ],
                       ),
                     ),
@@ -176,7 +211,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         backgroundColor: AppColors.yellow,
                         foregroundColor: AppColors.ink,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                       ),
                       onPressed: () {
                         storage.recordDailyComplete('2026-10-26');
@@ -205,6 +240,343 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildOverallProgressCard({
+    required BuildContext context,
+    required bool isDark,
+    required double progress,
+    required int progressPercent,
+    required int totalCompleted,
+    required int totalLevels,
+    required int totalStars,
+    required int maxStars,
+    required int completedCrosswords,
+    required int totalCrosswords,
+    required int completedRebus,
+    required int totalRebus,
+  }) {
+    final isAllCompleted = progress >= 1.0 && totalLevels > 0;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () {
+        _showProgressDetailsSheet(
+          context: context,
+          isDark: isDark,
+          progress: progress,
+          progressPercent: progressPercent,
+          totalCompleted: totalCompleted,
+          totalLevels: totalLevels,
+          totalStars: totalStars,
+          maxStars: maxStars,
+          completedCrosswords: completedCrosswords,
+          totalCrosswords: totalCrosswords,
+          completedRebus: completedRebus,
+          totalRebus: totalRebus,
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E2438) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isDark ? Colors.white12 : const Color(0xFFE2E8F0),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      isAllCompleted ? '🎉' : '🏆',
+                      style: const TextStyle(fontSize: 18),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      isAllCompleted ? 'Game 100% Completed!' : 'Overall Game Progress',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: isDark ? Colors.white : AppColors.ink,
+                      ),
+                    ),
+                  ],
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: isAllCompleted
+                        ? AppColors.mint.withValues(alpha: 0.2)
+                        : AppColors.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isAllCompleted ? AppColors.mint : AppColors.primary,
+                      width: 1,
+                    ),
+                  ),
+                  child: Text(
+                    '$progressPercent% Done',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                      color: isAllCompleted ? AppColors.mint : AppColors.primary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            // Progress Bar Track
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 10,
+                backgroundColor: isDark ? Colors.white12 : const Color(0xFFE2E8F0),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  isAllCompleted ? AppColors.mint : AppColors.primary,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            // Sub stats row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '🎯 $totalCompleted of $totalLevels Levels',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white70 : Colors.black54,
+                  ),
+                ),
+                Text(
+                  '⭐ $totalStars / $maxStars Stars',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white70 : Colors.black54,
+                  ),
+                ),
+                Text(
+                  '🎁 ${storage.unlockedTitles.length} Trophies',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white70 : Colors.black54,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showProgressDetailsSheet({
+    required BuildContext context,
+    required bool isDark,
+    required double progress,
+    required int progressPercent,
+    required int totalCompleted,
+    required int totalLevels,
+    required int totalStars,
+    required int maxStars,
+    required int completedCrosswords,
+    required int totalCrosswords,
+    required int completedRebus,
+    required int totalRebus,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: isDark ? const Color(0xFF1E2438) : Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.white24 : Colors.black12,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                Row(
+                  children: [
+                    const Text('🏆', style: TextStyle(fontSize: 26)),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Overall Game Completion',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : AppColors.ink,
+                            ),
+                          ),
+                          Text(
+                            '$progressPercent% of the full game completed',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: isDark ? Colors.white70 : Colors.black54,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    minHeight: 12,
+                    backgroundColor: isDark ? Colors.white12 : const Color(0xFFE2E8F0),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      progress >= 1.0 ? AppColors.mint : AppColors.primary,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Detailed Breakdown List
+                _buildProgressDetailRow(
+                  icon: '📝',
+                  title: 'Crossword Puzzles',
+                  value: '$completedCrosswords / $totalCrosswords Cleared',
+                  isDark: isDark,
+                ),
+                const SizedBox(height: 10),
+                _buildProgressDetailRow(
+                  icon: '🧩',
+                  title: 'Emoji Rebus Puzzles',
+                  value: '$completedRebus / $totalRebus Cleared',
+                  isDark: isDark,
+                ),
+                const SizedBox(height: 10),
+                _buildProgressDetailRow(
+                  icon: '⭐',
+                  title: 'Mastery Stars',
+                  value: '$totalStars / $maxStars Earned',
+                  isDark: isDark,
+                ),
+                const SizedBox(height: 10),
+                _buildProgressDetailRow(
+                  icon: '🪙',
+                  title: 'Trivia Points',
+                  value: '${storage.points} PTS',
+                  isDark: isDark,
+                ),
+                const SizedBox(height: 10),
+                _buildProgressDetailRow(
+                  icon: '🏆',
+                  title: 'Trophy Room Cards',
+                  value: '${storage.unlockedTitles.length} / 190 Unlocked',
+                  isDark: isDark,
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        onPressed: () => Navigator.pop(ctx),
+                        child: const Text('Close'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        icon: const Icon(Icons.emoji_events, size: 18),
+                        label: const Text('View Dex'),
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const DexScreen()),
+                          ).then((_) => setState(() {}));
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildProgressDetailRow({
+    required String icon,
+    required String title,
+    required String value,
+    required bool isDark,
+  }) {
+    return Row(
+      children: [
+        Text(icon, style: const TextStyle(fontSize: 16)),
+        const SizedBox(width: 10),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: isDark ? Colors.white70 : AppColors.ink,
+          ),
+        ),
+        const Spacer(),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : AppColors.ink,
+          ),
+        ),
+      ],
     );
   }
 

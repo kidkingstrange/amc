@@ -104,3 +104,16 @@ Tracking all major activities across agent roles.
   - Locked level cards styled with lock badges, clear unlock prerequisites, and friendly tap guidance.
   - Redesigned Dex into "Trophy Room & Trivia Dex" with top explainer banner and Mystery Trophy Cards to eliminate any user confusion.
 - **Status**: Completed, tested, and pushed to GitHub.
+
+---
+
+### 2026-10-27: Overall Game Completion Progress Bar Added
+- **Role**: Flutter Engineer & UI/UX Designer
+- **Action**:
+  - Implemented top "Overall Game Progress" dashboard card in `lib/ui/screens/home_screen.dart`.
+  - Added rounded `LinearProgressIndicator` showing live completion % across all crossword and rebus levels.
+  - Added real-time milestone counters for levels completed (`🎯 X of Y`), stars earned (`⭐ X / Y`), and trophies unlocked (`🎁 X`).
+  - Added interactive bottom sheet with detailed progress breakdowns across game modes and quick link to the Trophy Room.
+  - Updated widget test suite in `test/widget_test.dart` to assert progress bar rendering.
+- **Status**: Verified clean (`flutter analyze` 0 issues, all 23 tests pass).
+

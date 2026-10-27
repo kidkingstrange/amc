@@ -114,3 +114,16 @@ All key technical, product, and design decisions are logged here with rationale 
   2. **Trophy Room & Dex Rebranding**: Redesigned the Dex screen to clearly communicate it is an achievement Trophy Hall (not a paywall), featuring an explainer banner, `❓ Mystery Collectible` cards, info dialogs, and win modal trophy badges.
 - **Why**: Gives players a clear, addictive progression loop while ensuring paying buyers understand that all 190 trophies are 100% free gameplay rewards.
 - **Owner Action Required**: Approved by Owner.
+
+---
+
+## Decision 012: Overall Game Completion Progress Bar
+- **Date**: 2026-10-27
+- **Status**: Adopted
+- **Decision**: Added an "Overall Game Progress" dashboard card at the top of the Home Screen:
+  1. **Visual Completion Bar**: Chunky `LinearProgressIndicator` with rounded borders showing real-time % completion of the entire game.
+  2. **Live Stats Badges**: Real-time counters showing Levels Cleared (`🎯 X of Y Levels`), Mastery Stars (`⭐ X / Y Stars`), and Trophy Room Dex Unlocks (`🎁 X Trophies`).
+  3. **Interactive Deep Dive**: Tapping the card opens a bottom sheet showing detailed breakdowns across Crosswords, Emoji Rebus, Stars, Points balance, and a direct shortcut to the Trophy Room.
+- **Why**: Directly requested by the owner. Gives players a motivating high-level goal and instant visibility into how close they are to beating 100% of the game.
+- **Owner Action Required**: None. Verify in updated build.
+
