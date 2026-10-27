@@ -173,5 +173,23 @@ All key technical, product, and design decisions are logged here with rationale 
 - **Why**: Directly requested by the owner to give coins a practical, exciting gameplay purpose while preserving difficulty and challenge.
 - **Owner Action Required**: None. Enjoy testing the Hint Shop on device!
 
+---
+
+## Decision 016: Official App Launcher Icon Design & Integration
+- **Date**: 2026-10-27
+- **Status**: Adopted
+- **Decision**: Designed and packaged the official Android launcher icon and Google Play Store store assets:
+  1. **Visual Concept ("The Kitsune & Cinema Reel Duo")**:
+     - Modern Android squircle launcher emblem on a midnight navy background (`#121526`).
+     - Features an iconic Japanese porcelain Kitsune mask with crimson red whisker markings (instantly recognizable to anime fans; traditional Japanese folklore in the public domain).
+     - Layered over glowing mint-green (`#2EC4B6`) and sunny yellow (`#FFC93C`) crossword puzzle tiles.
+     - Framed by a golden cinema film reel, film clapperboard geometry, subtle katana hilts, and radiant sparkle stars.
+     - 100% original, zero copyrighted characters, zero franchise logos, zero text.
+  2. **Android Asset Scaling**:
+     - Built `tools/generate_launcher_icons.ps1` to generate all required Android mipmap densities (`mipmap-mdpi` 48px, `mipmap-hdpi` 72px, `mipmap-xhdpi` 96px, `mipmap-xxhdpi` 144px, `mipmap-xxxhdpi` 192px) and Google Play Store 512x512/1024x1024 master assets in `assets/icon/`.
+- **Why**: Replaces the default Flutter framework icon with a distinctive, professional brand identity tailored for anime and movie trivia fans.
+- **Owner Action Required**: None. Check out the icon on device!
+
+
 
 
