@@ -184,6 +184,26 @@ class _RebusScreenState extends State<RebusScreen> {
                 style: const TextStyle(fontSize: 14, color: AppColors.ink, height: 1.3),
               ),
             ),
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Row(
+                children: [
+                  Text('🏆', style: TextStyle(fontSize: 16)),
+                  SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'Trophy Card Unlocked in your Dex!',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primary),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
         actions: [
