@@ -178,6 +178,20 @@ class RebusEngine {
     _checkCompletion();
   }
 
+  void revealFullAnswer() {
+    for (final slot in slots) {
+      if (!slot.isSeparator) {
+        slot.guess = slot.solutionChar;
+        slot.isRevealed = true;
+      }
+    }
+    unlockedHints.add(1);
+    unlockedHints.add(2);
+    unlockedHints.add(3);
+    unlockedHints.add(4);
+    _checkCompletion();
+  }
+
   void _checkCompletion() {
     for (final slot in slots) {
       if (!slot.isCorrect) {

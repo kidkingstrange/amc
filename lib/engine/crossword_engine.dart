@@ -1,4 +1,5 @@
 // lib/engine/crossword_engine.dart
+import 'dart:math';
 import 'crossword_models.dart';
 
 enum WordFeedback { none, wordCorrect, wordWrong }
@@ -326,6 +327,61 @@ class CrosswordEngine {
       selectedCell.isError = false;
     }
     return correct;
+  }
+
+  bool revealFirstLetterOfActiveWord() {
+    final word = activeWord;
+    if (word == null || isWordLocked(word)) return false;
+
+    for (int i = 0; i < word.length; i++) {
+      final r = word.direction == ClueDirection.across ? word.row : word.row + i;
+      final c = word.direction == ClueDirection.across ? word.col + i : word.col;
+      final cell = puzzle.grid[r][c];
+      if (cell.guess != cell.solution) {
+        cell.guess = cell.solution;
+        cell.isPencil = false;
+        cell.isError = false;
+        hintsUsed++;
+        if (_isWordCompletelyFilled(word) && _isWordCompletelyCorrect(word)) {
+          _lockWord(word);
+        }
+        _checkPuzzleCompletion();
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool revealRandomLetterOfActiveWord() {
+    final word = activeWord;
+    if (word == null || isWordLocked(word)) return false;
+
+    final unrevealedIndices = <int>[];
+    for (int i = 0; i < word.length; i++) {
+      final r = word.direction == ClueDirection.across ? word.row : word.row + i;
+      final c = word.direction == ClueDirection.across ? word.col + i : word.col;
+      final cell = puzzle.grid[r][c];
+      if (cell.guess != cell.solution) {
+        unrevealedIndices.add(i);
+      }
+    }
+
+    if (unrevealedIndices.isEmpty) return false;
+
+    final randomIndex = unrevealedIndices[Random().nextInt(unrevealedIndices.length)];
+    final r = word.direction == ClueDirection.across ? word.row : word.row + randomIndex;
+    final c = word.direction == ClueDirection.across ? word.col + randomIndex : word.col;
+    final cell = puzzle.grid[r][c];
+    cell.guess = cell.solution;
+    cell.isPencil = false;
+    cell.isError = false;
+    hintsUsed++;
+
+    if (_isWordCompletelyFilled(word) && _isWordCompletelyCorrect(word)) {
+      _lockWord(word);
+    }
+    _checkPuzzleCompletion();
+    return true;
   }
 
   void revealActiveLetter() {

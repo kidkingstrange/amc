@@ -130,4 +130,18 @@ Tracking all major activities across agent roles.
   - Verified clean (`flutter analyze` 0 issues, all 23 tests pass).
 - **Status**: Tested, verified, and committed.
 
+---
+
+### 2026-10-27: Level 1 "WATER" Fix & 3-Tier Progressive Coin Hint Economy
+- **Role**: Puzzle Designer, Game Economy Designer & Flutter Engineer
+- **Action**:
+  - Corrected Level 1 (cw_01) 1 Across: changed answer from ambiguous `"TOTAL"` to `"WATER"` (Tanjiro's iconic breathing technique in Demon Slayer) with clean clue `"Tanjiro's iconic breathing style element in Demon Slayer"`.
+  - Added coin spending capability in `GameStorage.spendPoints(cost)`.
+  - Added 3-tier progressive hint engine methods in `CrosswordEngine` (`revealFirstLetterOfActiveWord`, `revealRandomLetterOfActiveWord`, `revealActiveWord`) and `RebusEngine` (`revealFullAnswer`).
+  - Built interactive "Hint Shop" modal bottom sheets for both Crossword and Rebus modes with tiered pricing (50 Coins for initial nudge, 100 Coins for closer letter/clue, 250 Coins for full solve).
+  - Added Hint Shop buttons to AppBars and toolbar rows.
+  - Added unit test coverage for point spending and hint tiers (25 tests passing).
+- **Status**: Tested, verified clean (`flutter analyze` 0 issues, all 25 tests pass), and pushed to GitHub.
+
+
 

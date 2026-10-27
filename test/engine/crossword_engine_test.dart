@@ -150,6 +150,38 @@ void main() {
       expect(engine.hintsUsed, 3);
     });
 
+    test('3-Tier hint methods reveal progressive hints for active word', () {
+      engine.selectCell(0, 0); // 1 ACROSS: DEMON
+      expect(puzzle.grid[0][0].guess, '');
+
+      // Hint 1: reveal starting letter
+      final ok1 = engine.revealFirstLetterOfActiveWord();
+      expect(ok1, isTrue);
+      expect(puzzle.grid[0][0].guess, 'D');
+
+      // Hint 2: reveal random letter in DEMON
+      final ok2 = engine.revealRandomLetterOfActiveWord();
+      expect(ok2, isTrue);
+      // At least two letters now filled in DEMON
+      final filledCount = [
+        puzzle.grid[0][0].guess,
+        puzzle.grid[0][1].guess,
+        puzzle.grid[0][2].guess,
+        puzzle.grid[0][3].guess,
+        puzzle.grid[0][4].guess,
+      ].where((g) => g.isNotEmpty).length;
+      expect(filledCount, greaterThanOrEqualTo(2));
+
+      // Hint 3: solve entire word
+      engine.revealActiveWord();
+      expect(puzzle.grid[0][0].guess, 'D');
+      expect(puzzle.grid[0][1].guess, 'E');
+      expect(puzzle.grid[0][2].guess, 'M');
+      expect(puzzle.grid[0][3].guess, 'O');
+      expect(puzzle.grid[0][4].guess, 'N');
+      expect(engine.isWordLocked(puzzle.words[0]), isTrue);
+    });
+
     test('Completing puzzle awards 3 stars with clean play', () {
       // Fill across: DEMON
       engine.selectCell(0, 0);

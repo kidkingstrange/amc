@@ -276,6 +276,292 @@ class _CrosswordScreenState extends State<CrosswordScreen> with WidgetsBindingOb
     );
   }
 
+  void _showHintShopSheet() {
+    if (_engine == null) return;
+    final activeWord = _engine!.activeWord;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    if (activeWord == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Tap any word on the grid first to view hints!'),
+          duration: Duration(seconds: 1),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    final isWordLocked = _engine!.isWordLocked(activeWord);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: isDark ? AppColors.nightSurface : Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) {
+          final userPoints = storage.points;
+
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.white24 : Colors.black12,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          const Text('💡', style: TextStyle(fontSize: 22)),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Hint Shop',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : AppColors.ink,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.yellow.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: AppColors.yellow, width: 1.5),
+                        ),
+                        child: Row(
+                          children: [
+                            const Text('🪙', style: TextStyle(fontSize: 14)),
+                            const SizedBox(width: 4),
+                            Text(
+                              '$userPoints Coins',
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.ink),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '${activeWord.number} ${activeWord.direction == ClueDirection.across ? "ACROSS" : "DOWN"}: "${activeWord.clue}"',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                      color: isDark ? Colors.white70 : Colors.black54,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 16),
+
+                  if (isWordLocked)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.mint.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Center(
+                        child: Text(
+                          '✓ This word is already solved and locked in place!',
+                          style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.mint),
+                        ),
+                      ),
+                    )
+                  else ...[
+                    // Tier 1 Hint: Reveal First Letter (50 Coins)
+                    _buildHintOptionCard(
+                      tier: 'HINT 1',
+                      title: 'Reveal Starting Letter',
+                      description: 'Fills the first letter to get you started',
+                      cost: 50,
+                      userPoints: userPoints,
+                      isDark: isDark,
+                      onBuy: () {
+                        if (storage.spendPoints(50)) {
+                          Navigator.pop(ctx);
+                          _engine!.revealFirstLetterOfActiveWord();
+                          setState(() {});
+                          if (storage.soundEnabled) SystemSound.play(SystemSoundType.click);
+                          if (storage.hapticsEnabled) HapticFeedback.mediumImpact();
+                          _requestKeyboardFocus();
+                          if (_engine!.isCompleted) _onLevelCompleted();
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 10),
+
+                    // Tier 2 Hint: Reveal Random Letter (100 Coins)
+                    _buildHintOptionCard(
+                      tier: 'HINT 2',
+                      title: 'Reveal Another Letter',
+                      description: 'Fills in another missing letter to get you closer',
+                      cost: 100,
+                      userPoints: userPoints,
+                      isDark: isDark,
+                      onBuy: () {
+                        if (storage.spendPoints(100)) {
+                          Navigator.pop(ctx);
+                          _engine!.revealRandomLetterOfActiveWord();
+                          setState(() {});
+                          if (storage.soundEnabled) SystemSound.play(SystemSoundType.click);
+                          if (storage.hapticsEnabled) HapticFeedback.mediumImpact();
+                          _requestKeyboardFocus();
+                          if (_engine!.isCompleted) _onLevelCompleted();
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 10),
+
+                    // Tier 3 Hint: Solve Entire Word (250 Coins)
+                    _buildHintOptionCard(
+                      tier: 'HINT 3',
+                      title: 'Solve Entire Word',
+                      description: 'Completely reveals and locks the full word',
+                      cost: 250,
+                      userPoints: userPoints,
+                      isDark: isDark,
+                      isFinal: true,
+                      onBuy: () {
+                        if (storage.spendPoints(250)) {
+                          Navigator.pop(ctx);
+                          _engine!.revealActiveWord();
+                          setState(() {});
+                          if (storage.soundEnabled) SystemSound.play(SystemSoundType.click);
+                          if (storage.hapticsEnabled) HapticFeedback.heavyImpact();
+                          _requestKeyboardFocus();
+                          if (_engine!.isCompleted) _onLevelCompleted();
+                        }
+                      },
+                    ),
+                  ],
+                  const SizedBox(height: 14),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildHintOptionCard({
+    required String tier,
+    required String title,
+    required String description,
+    required int cost,
+    required int userPoints,
+    required bool isDark,
+    required VoidCallback onBuy,
+    bool isFinal = false,
+  }) {
+    final canAfford = userPoints >= cost;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF131728) : const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isFinal
+              ? AppColors.coral.withValues(alpha: 0.5)
+              : (canAfford ? AppColors.primary.withValues(alpha: 0.3) : (isDark ? Colors.white12 : Colors.black12)),
+          width: 1.5,
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: isFinal
+                            ? AppColors.coral.withValues(alpha: 0.2)
+                            : AppColors.primary.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        tier,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: isFinal ? AppColors.coral : AppColors.primary,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : AppColors.ink,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  description,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: isDark ? Colors.white60 : Colors.black54,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: canAfford ? AppColors.yellow : (isDark ? Colors.white12 : Colors.black12),
+              foregroundColor: canAfford ? AppColors.ink : (isDark ? Colors.white38 : Colors.black38),
+              elevation: canAfford ? 1 : 0,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: canAfford ? onBuy : null,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('🪙', style: TextStyle(fontSize: 12)),
+                const SizedBox(width: 4),
+                Text(
+                  '$cost',
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading || _engine == null) {
@@ -312,16 +598,11 @@ class _CrosswordScreenState extends State<CrosswordScreen> with WidgetsBindingOb
               ],
             ),
           ),
-          // Reveal Hint Button
+          // Hint Shop Button (Spend Coins)
           IconButton(
             icon: const Icon(Icons.lightbulb_outline),
-            tooltip: 'Reveal Letter Hint',
-            onPressed: () {
-              setState(() {
-                _engine!.revealActiveLetter();
-              });
-              if (_engine!.isCompleted) _onLevelCompleted();
-            },
+            tooltip: 'Hint Shop (Buy Hints with Coins)',
+            onPressed: _showHintShopSheet,
           ),
         ],
       ),
@@ -471,6 +752,13 @@ class _CrosswordScreenState extends State<CrosswordScreen> with WidgetsBindingOb
                             if (storage.hapticsEnabled) HapticFeedback.heavyImpact();
                           }
                         },
+                      ),
+                      // Hint Shop Button
+                      TextButton.icon(
+                        style: TextButton.styleFrom(foregroundColor: AppColors.primary),
+                        icon: const Icon(Icons.lightbulb_outline, size: 18),
+                        label: const Text('Hint', style: TextStyle(fontSize: 12)),
+                        onPressed: _showHintShopSheet,
                       ),
                       // Keyboard Toggle
                       Builder(builder: (btnContext) {

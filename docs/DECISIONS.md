@@ -140,4 +140,38 @@ All key technical, product, and design decisions are logged here with rationale 
 - **Why**: When Android minimizes an app, the OS closes the IME while Flutter's internal `FocusNode.hasFocus` remains true. Without this cycle, Flutter considers subsequent `requestFocus()` calls a no-op, leaving the player stranded without a keyboard until game restart.
 - **Owner Action Required**: None. Verify on device.
 
+---
+
+## Decision 014: Level 1 Clue Alignment & Answer Correction (WATER)
+- **Date**: 2026-10-27
+- **Status**: Adopted
+- **Decision**: Updated 1 Across in `assets/puzzles/crosswords/cw_01.json`:
+  - Answer changed from ambiguous `"TOTAL"` (intended for Total Concentration Breathing) to `"WATER"` (Water Breathing).
+  - Clue refined to `"Tanjiro's iconic breathing style element in Demon Slayer"`.
+- **Why**: Flagged directly by the owner (David). Anyone familiar with Demon Slayer knows Tanjiro's primary element is Water Breathing. Both words share 5 letters with `"T"` intersecting `"TANJIRO"`, but `"WATER"` is intuitive, accurate, and completely eliminates player confusion on Level 1.
+- **Owner Action Required**: None. Tested and verified.
+
+---
+
+## Decision 015: 3-Tier Progressive Coin Hint Economy
+- **Date**: 2026-10-27
+- **Status**: Adopted
+- **Decision**: Converted earned trivia coins (`🪙`) into a functional hint economy across Crossword and Emoji Rebus modes:
+  1. **Crossword Hint Shop**:
+     - **Hint 1 (50 Coins)**: Reveal Starting Letter (places the first letter of the active word).
+     - **Hint 2 (100 Coins)**: Reveal Another Letter (fills a random missing letter to get closer).
+     - **Hint 3 (250 Coins)**: Solve Entire Word (completely reveals and locks the full word).
+  2. **Emoji Rebus Hint Shop**:
+     - **Hint 1 (50 Coins)**: Category & Release Year Trivia Clue.
+     - **Hint 2 (100 Coins)**: Reveal Starting Letter.
+     - **Hint 3 (250 Coins)**: Solve Entire Title (fills all slots and finishes level).
+  3. **Economic Balance & Guardrails**:
+     - Solving words awards +50 Coins, Rebus awards +100 Coins, Level bonus +200 Coins.
+     - Starter balance of 100 Coins given to new players.
+     - Progressive steep pricing (50 -> 100 -> 250) prevents spamming hints.
+     - Hint 3 full reveals forfeit word solve point rewards to eliminate farming loops.
+- **Why**: Directly requested by the owner to give coins a practical, exciting gameplay purpose while preserving difficulty and challenge.
+- **Owner Action Required**: None. Enjoy testing the Hint Shop on device!
+
+
 

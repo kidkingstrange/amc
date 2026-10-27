@@ -97,6 +97,11 @@ void main() {
       expect(engine.unlockedHints.contains(3), isTrue);
       final revealedCount = engine.slots.where((s) => s.isRevealed).length;
       expect(revealedCount, greaterThanOrEqualTo(2));
+
+      // Hint 4: reveal full answer
+      engine.revealFullAnswer();
+      expect(engine.isCompleted, isTrue);
+      expect(engine.slots.map((s) => s.guess).join(), 'INCEPTION');
     });
   });
 

@@ -69,5 +69,33 @@ void main() {
       storage.isDarkMode = true;
       expect(storage.isDarkMode, isTrue);
     });
+
+    test('Points earning and spending for hints works correctly', () {
+      expect(storage.points, 0);
+      storage.addPoints(300);
+      expect(storage.points, 300);
+
+      // Spend 50 on Hint 1
+      final ok1 = storage.spendPoints(50);
+      expect(ok1, isTrue);
+      expect(storage.points, 250);
+
+      // Spend 100 on Hint 2
+      final ok2 = storage.spendPoints(100);
+      expect(ok2, isTrue);
+      expect(storage.points, 150);
+
+      // Cannot spend 250 with only 150 balance
+      final ok3 = storage.spendPoints(250);
+      expect(ok3, isFalse);
+      expect(storage.points, 150);
+
+      // Earn more and spend 250 on Hint 3
+      storage.addPoints(200);
+      expect(storage.points, 350);
+      final ok4 = storage.spendPoints(250);
+      expect(ok4, isTrue);
+      expect(storage.points, 100);
+    });
   });
 }

@@ -74,6 +74,14 @@ class GameStorage {
     _persist();
   }
 
+  bool spendPoints(int amount) {
+    if (amount <= 0) return false;
+    if (points < amount) return false;
+    _data['points'] = points - amount;
+    _persist();
+    return true;
+  }
+
   // Collection / Dex Unlocks
   bool isTitleUnlocked(String titleId) {
     final list = List<String>.from((_data['unlockedTitles'] as List?) ?? []);

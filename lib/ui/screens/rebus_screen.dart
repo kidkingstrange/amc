@@ -263,6 +263,298 @@ class _RebusScreenState extends State<RebusScreen> with WidgetsBindingObserver {
     );
   }
 
+  void _showHintShopSheet() {
+    if (_engine == null) return;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final hints = _engine!.unlockedHints;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: isDark ? AppColors.nightSurface : Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) {
+          final userPoints = storage.points;
+
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.white24 : Colors.black12,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          const Text('💡', style: TextStyle(fontSize: 22)),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Rebus Hint Shop',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : AppColors.ink,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.yellow.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: AppColors.yellow, width: 1.5),
+                        ),
+                        child: Row(
+                          children: [
+                            const Text('🪙', style: TextStyle(fontSize: 14)),
+                            const SizedBox(width: 4),
+                            Text(
+                              '$userPoints Coins',
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.ink),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Emojis: ${_engine!.puzzle.emojis} • Guess the ${_engine!.puzzle.category}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                      color: isDark ? Colors.white70 : Colors.black54,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  if (_engine!.isCompleted)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.mint.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Center(
+                        child: Text(
+                          '✓ Puzzle is already solved!',
+                          style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.mint),
+                        ),
+                      ),
+                    )
+                  else ...[
+                    // Tier 1 Hint: Category & Year Trivia Hint (50 Coins)
+                    _buildHintOptionCard(
+                      tier: 'HINT 1',
+                      title: 'Category & Year Trivia',
+                      description: hints.contains(1)
+                          ? 'Unlocked: "${_engine!.puzzle.hintLadder['hint1'] ?? ''}"'
+                          : 'Reveals release year and extra trivia context',
+                      cost: 50,
+                      isUnlocked: hints.contains(1),
+                      userPoints: userPoints,
+                      isDark: isDark,
+                      onBuy: () {
+                        if (storage.spendPoints(50)) {
+                          Navigator.pop(ctx);
+                          _engine!.unlockHint(1);
+                          setState(() {});
+                          if (storage.soundEnabled) SystemSound.play(SystemSoundType.click);
+                          if (storage.hapticsEnabled) HapticFeedback.mediumImpact();
+                          _requestKeyboardFocus();
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 10),
+
+                    // Tier 2 Hint: Reveal First Letter (100 Coins)
+                    _buildHintOptionCard(
+                      tier: 'HINT 2',
+                      title: 'Reveal Starting Letter',
+                      description: hints.contains(2)
+                          ? 'Unlocked: First letter placed in slot'
+                          : 'Fills the first letter of the title',
+                      cost: 100,
+                      isUnlocked: hints.contains(2),
+                      userPoints: userPoints,
+                      isDark: isDark,
+                      onBuy: () {
+                        if (storage.spendPoints(100)) {
+                          Navigator.pop(ctx);
+                          _engine!.unlockHint(2);
+                          setState(() {});
+                          if (storage.soundEnabled) SystemSound.play(SystemSoundType.click);
+                          if (storage.hapticsEnabled) HapticFeedback.mediumImpact();
+                          _requestKeyboardFocus();
+                          if (_engine!.isCompleted) _showWinDialog();
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 10),
+
+                    // Tier 3 Hint: Solve Full Title (250 Coins)
+                    _buildHintOptionCard(
+                      tier: 'HINT 3',
+                      title: 'Solve Entire Title',
+                      description: 'Completely reveals and solves the full puzzle',
+                      cost: 250,
+                      isUnlocked: false,
+                      userPoints: userPoints,
+                      isDark: isDark,
+                      isFinal: true,
+                      onBuy: () {
+                        if (storage.spendPoints(250)) {
+                          Navigator.pop(ctx);
+                          _engine!.revealFullAnswer();
+                          setState(() {});
+                          if (storage.soundEnabled) SystemSound.play(SystemSoundType.click);
+                          if (storage.hapticsEnabled) HapticFeedback.heavyImpact();
+                          _showWinDialog();
+                        }
+                      },
+                    ),
+                  ],
+                  const SizedBox(height: 14),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildHintOptionCard({
+    required String tier,
+    required String title,
+    required String description,
+    required int cost,
+    required bool isUnlocked,
+    required int userPoints,
+    required bool isDark,
+    required VoidCallback onBuy,
+    bool isFinal = false,
+  }) {
+    final canAfford = userPoints >= cost;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF131728) : const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isUnlocked
+              ? AppColors.mint.withValues(alpha: 0.5)
+              : (isFinal
+                  ? AppColors.coral.withValues(alpha: 0.5)
+                  : (canAfford ? AppColors.primary.withValues(alpha: 0.3) : (isDark ? Colors.white12 : Colors.black12))),
+          width: 1.5,
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: isUnlocked
+                            ? AppColors.mint.withValues(alpha: 0.2)
+                            : (isFinal ? AppColors.coral.withValues(alpha: 0.2) : AppColors.primary.withValues(alpha: 0.15)),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        isUnlocked ? '$tier ✓' : tier,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: isUnlocked ? AppColors.mint : (isFinal ? AppColors.coral : AppColors.primary),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : AppColors.ink,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  description,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: isDark ? Colors.white60 : Colors.black54,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          if (isUnlocked)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.mint.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Text(
+                'ACTIVE',
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.mint),
+              ),
+            )
+          else
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: canAfford ? AppColors.yellow : (isDark ? Colors.white12 : Colors.black12),
+                foregroundColor: canAfford ? AppColors.ink : (isDark ? Colors.white38 : Colors.black38),
+                elevation: canAfford ? 1 : 0,
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              onPressed: canAfford ? onBuy : null,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('🪙', style: TextStyle(fontSize: 12)),
+                  const SizedBox(width: 4),
+                  Text(
+                    '$cost',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading || _engine == null) {
@@ -298,6 +590,12 @@ class _RebusScreenState extends State<RebusScreen> with WidgetsBindingObserver {
                 ),
               ],
             ),
+          ),
+          // Hint Shop Button
+          IconButton(
+            icon: const Icon(Icons.lightbulb_outline),
+            tooltip: 'Hint Shop (Buy Hints with Coins)',
+            onPressed: _showHintShopSheet,
           ),
           // Keyboard toggle
           Builder(builder: (btnContext) {
@@ -462,35 +760,17 @@ class _RebusScreenState extends State<RebusScreen> with WidgetsBindingObserver {
                       }),
                     ),
                     const SizedBox(height: 24),
-                    // Hint Ladder Button
+                    // Hint Shop Button
                     OutlinedButton.icon(
                       icon: const Icon(Icons.lightbulb_outline, size: 20),
-                      label: Text(
-                        _engine!.unlockedHints.isEmpty
-                            ? 'Unlock Category & Year Hint'
-                            : (_engine!.unlockedHints.length == 1
-                                ? 'Reveal First Letter'
-                                : 'Reveal Random Letter'),
-                      ),
+                      label: const Text('Buy Hints with Coins (🪙 50 - 250)'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.primary,
                         side: const BorderSide(color: AppColors.primary, width: 1.5),
                         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       ),
-                      onPressed: () {
-                        setState(() {
-                          if (!_engine!.unlockedHints.contains(1)) {
-                            _engine!.unlockHint(1);
-                          } else if (!_engine!.unlockedHints.contains(2)) {
-                            _engine!.unlockHint(2);
-                          } else {
-                            _engine!.unlockHint(3);
-                          }
-                        });
-                        _requestKeyboardFocus();
-                        if (_engine!.isCompleted) _showWinDialog();
-                      },
+                      onPressed: _showHintShopSheet,
                     ),
                     if (_engine!.unlockedHints.isNotEmpty)
                       Padding(
