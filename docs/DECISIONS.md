@@ -103,3 +103,14 @@ All key technical, product, and design decisions are logged here with rationale 
   5. **System Navigation Bar Padding**: Wrapped screens in `SafeArea(bottom: true)` and enabled `resizeToAvoidBottomInset: true` to ensure Android system navigation buttons permanently sit below the app without overlapping.
 - **Why**: Dramatically improves tactile gameplay feel, prevents title spoilers, adds gamified reward progression, and fixes device system bar overlap.
 - **Owner Action Required**: Test the updated APK on device.
+
+---
+
+## Decision 011: Sequential Level Progression & Trophy Room Clarity
+- **Date**: 2026-10-27
+- **Status**: Adopted
+- **Decision**: 
+  1. **Option A Sequential Level Unlock**: Level 1 is unlocked from the start. Level 2 unlocks upon completing Level 1 (earning at least 1 star). Locked levels display muted styling with `🔒 Complete Level X to unlock` and tap hints.
+  2. **Trophy Room & Dex Rebranding**: Redesigned the Dex screen to clearly communicate it is an achievement Trophy Hall (not a paywall), featuring an explainer banner, `❓ Mystery Collectible` cards, info dialogs, and win modal trophy badges.
+- **Why**: Gives players a clear, addictive progression loop while ensuring paying buyers understand that all 190 trophies are 100% free gameplay rewards.
+- **Owner Action Required**: Approved by Owner.

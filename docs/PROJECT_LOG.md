@@ -94,3 +94,13 @@ Tracking all major activities across agent roles.
   - Hidden emoji rebus titles on level list and game screen to prevent answer spoilers.
   - Fixed Android navigation bar overlay with `SafeArea(bottom: true)` across all screens.
 - **Status**: Tested, verified (`flutter analyze` clean, all 23 tests pass), and pushed to GitHub.
+
+---
+
+### 2026-10-27: Sequential Level Progression & Dex Explainer Complete
+- **Role**: Flutter Engineer & UI/UX Designer
+- **Action**:
+  - Implemented Option A (Sequential Level Unlock): Level 1 starts unlocked, Level 2 unlocks upon completing Level 1 with at least 1 star.
+  - Locked level cards styled with lock badges, clear unlock prerequisites, and friendly tap guidance.
+  - Redesigned Dex into "Trophy Room & Trivia Dex" with top explainer banner and Mystery Trophy Cards to eliminate any user confusion.
+- **Status**: Completed, tested, and pushed to GitHub.
