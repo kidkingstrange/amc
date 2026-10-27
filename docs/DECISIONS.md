@@ -127,3 +127,17 @@ All key technical, product, and design decisions are logged here with rationale 
 - **Why**: Directly requested by the owner. Gives players a motivating high-level goal and instant visibility into how close they are to beating 100% of the game.
 - **Owner Action Required**: None. Verify in updated build.
 
+---
+
+## Decision 013: App Lifecycle Keyboard Re-attachment & Touch Focus Recovery
+- **Date**: 2026-10-27
+- **Status**: Adopted
+- **Decision**: Fixed the keyboard dismissal issue when users minimize/background the app or switch tasks:
+  1. **`WidgetsBindingObserver` Integration**: Added lifecycle observers to `CrosswordScreen` and `RebusScreen` to detect `AppLifecycleState.resumed` and automatically re-request native keyboard focus via `TextInput.show` with a 150ms window-attachment delay.
+  2. **Stale Focus Recovery (`_requestKeyboardFocus`)**: Replaced raw `_focusNode.requestFocus()` calls with a robust cycle that detects when the soft keyboard is dismissed (`MediaQuery.viewInsets.bottom == 0`), resets stale focus, and invokes `TextInput.show`.
+  3. **Full-Screen Tap Recovery**: Wrapped game bodies in translucent `GestureDetector` so tapping anywhere on screen or on any puzzle cell restores the keyboard immediately without needing to restart the game.
+  4. **Dynamic Keyboard Toggle**: Toggle buttons now inspect real-time `viewInsets.bottom` rather than stale focus node state to always display the accurate "Show Keybd" or "Hide Keybd" state.
+- **Why**: When Android minimizes an app, the OS closes the IME while Flutter's internal `FocusNode.hasFocus` remains true. Without this cycle, Flutter considers subsequent `requestFocus()` calls a no-op, leaving the player stranded without a keyboard until game restart.
+- **Owner Action Required**: None. Verify on device.
+
+

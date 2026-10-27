@@ -117,3 +117,17 @@ Tracking all major activities across agent roles.
   - Updated widget test suite in `test/widget_test.dart` to assert progress bar rendering.
 - **Status**: Verified clean (`flutter analyze` 0 issues, all 23 tests pass).
 
+---
+
+### 2026-10-27: Bug Fix: Keyboard Focus Restoration After App Minimize/Resume
+- **Role**: Flutter Engineer
+- **Action**:
+  - Diagnosed root cause: Android closes the soft keyboard upon app minimization, but Flutter's `FocusNode.hasFocus` remains `true` in memory, causing subsequent `requestFocus()` calls to be ignored as no-ops.
+  - Implemented `WidgetsBindingObserver` in both `CrosswordScreen` and `RebusScreen` to listen for `AppLifecycleState.resumed` and automatically trigger keyboard re-attachment.
+  - Built `_requestKeyboardFocus()` method that safely detects when the keyboard is hidden (`MediaQuery.viewInsets.bottom == 0`), resets stale focus, and sends `TextInput.show` to Android's `InputMethodManager`.
+  - Added full-screen touch listener via `GestureDetector` so tapping anywhere on screen or on puzzle cells immediately brings the keyboard back up.
+  - Updated toggle buttons to inspect real-time `viewInsets.bottom` so the "Show Keybd" button accurately reflects keyboard state.
+  - Verified clean (`flutter analyze` 0 issues, all 23 tests pass).
+- **Status**: Tested, verified, and committed.
+
+

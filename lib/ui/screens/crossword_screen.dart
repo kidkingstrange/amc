@@ -22,7 +22,7 @@ class CrosswordScreen extends StatefulWidget {
   State<CrosswordScreen> createState() => _CrosswordScreenState();
 }
 
-class _CrosswordScreenState extends State<CrosswordScreen> {
+class _CrosswordScreenState extends State<CrosswordScreen> with WidgetsBindingObserver {
   final storage = GameStorage();
   CrosswordEngine? _engine;
   bool _isLoading = true;
@@ -34,14 +34,46 @@ class _CrosswordScreenState extends State<CrosswordScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadPuzzle();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _focusNode.dispose();
     _textController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Small delayed re-focus to guarantee Android window transition has finished
+      Future.delayed(const Duration(milliseconds: 150), () {
+        if (mounted) _requestKeyboardFocus();
+      });
+    }
+  }
+
+  void _requestKeyboardFocus() {
+    if (!mounted) return;
+    try {
+      final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
+      if (isKeyboardOpen && _focusNode.hasFocus) {
+        return;
+      }
+    } catch (_) {}
+
+    if (_focusNode.hasFocus) {
+      _focusNode.unfocus();
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _focusNode.requestFocus();
+        SystemChannels.textInput.invokeMethod('TextInput.show');
+      }
+    });
   }
 
   Future<void> _loadPuzzle() async {
@@ -57,8 +89,15 @@ class _CrosswordScreenState extends State<CrosswordScreen> {
 
     // Auto-focus native keyboard on load
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _focusNode.requestFocus();
+      if (mounted) _requestKeyboardFocus();
     });
+  }
+
+  void _resetInputController() {
+    _textController.value = const TextEditingValue(
+      text: ' ',
+      selection: TextSelection.collapsed(offset: 1),
+    );
   }
 
   void _handleNativeKeyboardInput(String val) {
@@ -67,7 +106,7 @@ class _CrosswordScreenState extends State<CrosswordScreen> {
     if (val.isEmpty) {
       // Backspace was pressed on native keyboard
       _onBackspace();
-      _textController.text = ' ';
+      _resetInputController();
       return;
     }
 
@@ -77,7 +116,7 @@ class _CrosswordScreenState extends State<CrosswordScreen> {
       if (char.isNotEmpty) {
         _onLetter(char);
       }
-      _textController.text = ' ';
+      _resetInputController();
     }
   }
 
@@ -288,36 +327,42 @@ class _CrosswordScreenState extends State<CrosswordScreen> {
       ),
       body: SafeArea(
         bottom: true,
-        child: Column(
-          children: [
-            // Hidden TextField to capture phone's native keyboard input
-            SizedBox(
-              width: 0,
-              height: 0,
-              child: TextField(
-                focusNode: _focusNode,
-                controller: _textController,
-                keyboardType: TextInputType.text,
-                textCapitalization: TextCapitalization.characters,
-                autocorrect: false,
-                enableSuggestions: false,
-                showCursor: false,
-                onChanged: _handleNativeKeyboardInput,
-              ),
-            ),
-            // Crossword Grid
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
-                child: Center(
-                  child: CrosswordGridWidget(
-                    engine: _engine!,
-                    onStateChanged: () => setState(() {}),
-                    onTapCell: () => _focusNode.requestFocus(),
+        child: GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTap: _requestKeyboardFocus,
+          child: Column(
+            children: [
+              // Hidden TextField to capture phone's native keyboard input
+              SizedBox(
+                width: 1,
+                height: 1,
+                child: Opacity(
+                  opacity: 0.0,
+                  child: TextField(
+                    focusNode: _focusNode,
+                    controller: _textController,
+                    keyboardType: TextInputType.text,
+                    textCapitalization: TextCapitalization.characters,
+                    autocorrect: false,
+                    enableSuggestions: false,
+                    showCursor: false,
+                    onChanged: _handleNativeKeyboardInput,
                   ),
                 ),
               ),
-            ),
+              // Crossword Grid
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+                  child: Center(
+                    child: CrosswordGridWidget(
+                      engine: _engine!,
+                      onStateChanged: () => setState(() {}),
+                      onTapCell: _requestKeyboardFocus,
+                    ),
+                  ),
+                ),
+              ),
             // Clue Bar & Native Keyboard Controls pinned above system keyboard
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
@@ -344,7 +389,7 @@ class _CrosswordScreenState extends State<CrosswordScreen> {
                         icon: const Icon(Icons.chevron_left),
                         onPressed: () {
                           setState(() => _engine!.prevClue());
-                          _focusNode.requestFocus();
+                          _requestKeyboardFocus();
                         },
                       ),
                       Expanded(
@@ -389,7 +434,7 @@ class _CrosswordScreenState extends State<CrosswordScreen> {
                         icon: const Icon(Icons.chevron_right),
                         onPressed: () {
                           setState(() => _engine!.nextClue());
-                          _focusNode.requestFocus();
+                          _requestKeyboardFocus();
                         },
                       ),
                     ],
@@ -406,7 +451,10 @@ class _CrosswordScreenState extends State<CrosswordScreen> {
                         ),
                         icon: Icon(_engine!.isPencilMode ? Icons.edit : Icons.edit_outlined, size: 18),
                         label: Text(_engine!.isPencilMode ? 'Pencil ON' : 'Pencil', style: const TextStyle(fontSize: 12)),
-                        onPressed: _onPencil,
+                        onPressed: () {
+                          _onPencil();
+                          _requestKeyboardFocus();
+                        },
                       ),
                       // Check Letter
                       TextButton.icon(
@@ -416,6 +464,7 @@ class _CrosswordScreenState extends State<CrosswordScreen> {
                         onPressed: () {
                           final ok = _engine!.checkActiveLetter();
                           setState(() {});
+                          _requestKeyboardFocus();
                           if (ok) {
                             if (storage.hapticsEnabled) HapticFeedback.lightImpact();
                           } else {
@@ -424,19 +473,23 @@ class _CrosswordScreenState extends State<CrosswordScreen> {
                         },
                       ),
                       // Keyboard Toggle
-                      TextButton.icon(
-                        style: TextButton.styleFrom(foregroundColor: AppColors.primary),
-                        icon: Icon(_focusNode.hasFocus ? Icons.keyboard_hide : Icons.keyboard, size: 18),
-                        label: Text(_focusNode.hasFocus ? 'Hide Keybd' : 'Show Keybd', style: const TextStyle(fontSize: 12)),
-                        onPressed: () {
-                          if (_focusNode.hasFocus) {
-                            _focusNode.unfocus();
-                          } else {
-                            _focusNode.requestFocus();
-                          }
-                          setState(() {});
-                        },
-                      ),
+                      Builder(builder: (btnContext) {
+                        final isKeyboardVisible = MediaQuery.of(btnContext).viewInsets.bottom > 0;
+                        return TextButton.icon(
+                          style: TextButton.styleFrom(foregroundColor: AppColors.primary),
+                          icon: Icon(isKeyboardVisible ? Icons.keyboard_hide : Icons.keyboard, size: 18),
+                          label: Text(isKeyboardVisible ? 'Hide Keybd' : 'Show Keybd', style: const TextStyle(fontSize: 12)),
+                          onPressed: () {
+                            if (isKeyboardVisible) {
+                              _focusNode.unfocus();
+                              SystemChannels.textInput.invokeMethod('TextInput.hide');
+                            } else {
+                              _requestKeyboardFocus();
+                            }
+                            setState(() {});
+                          },
+                        );
+                      }),
                     ],
                   ),
                 ],
@@ -445,6 +498,7 @@ class _CrosswordScreenState extends State<CrosswordScreen> {
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 }

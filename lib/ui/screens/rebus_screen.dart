@@ -20,7 +20,7 @@ class RebusScreen extends StatefulWidget {
   State<RebusScreen> createState() => _RebusScreenState();
 }
 
-class _RebusScreenState extends State<RebusScreen> {
+class _RebusScreenState extends State<RebusScreen> with WidgetsBindingObserver {
   final storage = GameStorage();
   RebusEngine? _engine;
   bool _isLoading = true;
@@ -32,14 +32,46 @@ class _RebusScreenState extends State<RebusScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadPuzzle();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _focusNode.dispose();
     _textController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Small delayed re-focus to guarantee Android window transition has finished
+      Future.delayed(const Duration(milliseconds: 150), () {
+        if (mounted) _requestKeyboardFocus();
+      });
+    }
+  }
+
+  void _requestKeyboardFocus() {
+    if (!mounted) return;
+    try {
+      final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
+      if (isKeyboardOpen && _focusNode.hasFocus) {
+        return;
+      }
+    } catch (_) {}
+
+    if (_focusNode.hasFocus) {
+      _focusNode.unfocus();
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _focusNode.requestFocus();
+        SystemChannels.textInput.invokeMethod('TextInput.show');
+      }
+    });
   }
 
   Future<void> _loadPuzzle() async {
@@ -54,8 +86,15 @@ class _RebusScreenState extends State<RebusScreen> {
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _focusNode.requestFocus();
+      if (mounted) _requestKeyboardFocus();
     });
+  }
+
+  void _resetInputController() {
+    _textController.value = const TextEditingValue(
+      text: ' ',
+      selection: TextSelection.collapsed(offset: 1),
+    );
   }
 
   void _handleNativeKeyboardInput(String val) {
@@ -63,7 +102,7 @@ class _RebusScreenState extends State<RebusScreen> {
 
     if (val.isEmpty) {
       _onBackspace();
-      _textController.text = ' ';
+      _resetInputController();
       return;
     }
 
@@ -72,7 +111,7 @@ class _RebusScreenState extends State<RebusScreen> {
       if (char.isNotEmpty) {
         _onLetter(char);
       }
-      _textController.text = ' ';
+      _resetInputController();
     }
   }
 
@@ -261,39 +300,49 @@ class _RebusScreenState extends State<RebusScreen> {
             ),
           ),
           // Keyboard toggle
-          IconButton(
-            icon: Icon(_focusNode.hasFocus ? Icons.keyboard_hide : Icons.keyboard),
-            tooltip: 'Toggle Phone Keyboard',
-            onPressed: () {
-              if (_focusNode.hasFocus) {
-                _focusNode.unfocus();
-              } else {
-                _focusNode.requestFocus();
-              }
-              setState(() {});
-            },
-          ),
+          Builder(builder: (btnContext) {
+            final isKeyboardVisible = MediaQuery.of(btnContext).viewInsets.bottom > 0;
+            return IconButton(
+              icon: Icon(isKeyboardVisible ? Icons.keyboard_hide : Icons.keyboard),
+              tooltip: isKeyboardVisible ? 'Hide Keyboard' : 'Show Keyboard',
+              onPressed: () {
+                if (isKeyboardVisible) {
+                  _focusNode.unfocus();
+                  SystemChannels.textInput.invokeMethod('TextInput.hide');
+                } else {
+                  _requestKeyboardFocus();
+                }
+                setState(() {});
+              },
+            );
+          }),
         ],
       ),
       body: SafeArea(
         bottom: true,
-        child: Column(
-          children: [
-            // Hidden TextField to capture phone's native keyboard input
-            SizedBox(
-              width: 0,
-              height: 0,
-              child: TextField(
-                focusNode: _focusNode,
-                controller: _textController,
-                keyboardType: TextInputType.text,
-                textCapitalization: TextCapitalization.characters,
-                autocorrect: false,
-                enableSuggestions: false,
-                showCursor: false,
-                onChanged: _handleNativeKeyboardInput,
+        child: GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTap: _requestKeyboardFocus,
+          child: Column(
+            children: [
+              // Hidden TextField to capture phone's native keyboard input
+              SizedBox(
+                width: 1,
+                height: 1,
+                child: Opacity(
+                  opacity: 0.0,
+                  child: TextField(
+                    focusNode: _focusNode,
+                    controller: _textController,
+                    keyboardType: TextInputType.text,
+                    textCapitalization: TextCapitalization.characters,
+                    autocorrect: false,
+                    enableSuggestions: false,
+                    showCursor: false,
+                    onChanged: _handleNativeKeyboardInput,
+                  ),
+                ),
               ),
-            ),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -379,7 +428,7 @@ class _RebusScreenState extends State<RebusScreen> {
                         return GestureDetector(
                           onTap: () {
                             setState(() => _engine!.selectSlot(i));
-                            _focusNode.requestFocus();
+                            _requestKeyboardFocus();
                           },
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 150),
@@ -439,7 +488,7 @@ class _RebusScreenState extends State<RebusScreen> {
                             _engine!.unlockHint(3);
                           }
                         });
-                        _focusNode.requestFocus();
+                        _requestKeyboardFocus();
                         if (_engine!.isCompleted) _showWinDialog();
                       },
                     ),
@@ -470,6 +519,7 @@ class _RebusScreenState extends State<RebusScreen> {
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 }
