@@ -157,6 +157,21 @@ Tracking all major activities across agent roles.
   - Documented Decision 016 in `docs/DECISIONS.md`.
 - **Status**: Generated, verified clean, ready for release packaging and Play Store listing.
 
+---
+
+### 2026-10-28: Emoji Rebus Per-Word Layout Flow Fix
+- **Role**: Flutter Engineer & UI/UX Designer
+- **Action**:
+  - Resolved word-split bug in Emoji Rebus challenge where multi-word titles (like *Jujutsu Kaisen*) broke across lines mid-word (`KA` on row 1, `ISEN` on row 2).
+  - Partitioned puzzle slots by word in `_getWordSlots()` using space boundaries.
+  - Replaced flat `Wrap` with dedicated word rows centered in a vertical `Column` (`_buildWordRows()`).
+  - Added responsive scaling via `FittedBox(fit: BoxFit.scaleDown)` to ensure longer words fit without overflowing on smaller screens.
+  - Added in-line rendering for punctuation marks (colons, hyphens, apostrophes).
+  - Added new widget test `test/widget/rebus_screen_test.dart`.
+  - All 26 test suites passing cleanly; `flutter analyze` 0 issues.
+- **Status**: Tested, verified, and pushed to GitHub main.
+
+
 
 
 

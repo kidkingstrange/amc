@@ -555,6 +555,133 @@ class _RebusScreenState extends State<RebusScreen> with WidgetsBindingObserver {
     );
   }
 
+  List<List<RebusSlot>> _getWordSlots() {
+    final List<List<RebusSlot>> words = [];
+    List<RebusSlot> currentWord = [];
+
+    for (final slot in _engine!.slots) {
+      if (slot.solutionChar == ' ') {
+        if (currentWord.isNotEmpty) {
+          words.add(currentWord);
+          currentWord = [];
+        }
+      } else {
+        currentWord.add(slot);
+      }
+    }
+    if (currentWord.isNotEmpty) {
+      words.add(currentWord);
+    }
+    return words;
+  }
+
+  Widget _buildSlotItem(RebusSlot slot, bool isDark) {
+    if (slot.isSeparator) {
+      return SizedBox(
+        width: 18,
+        height: 48,
+        child: Center(
+          child: Text(
+            slot.solutionChar,
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white70 : AppColors.ink,
+            ),
+          ),
+        ),
+      );
+    }
+
+    final isActive = _engine!.activeIndex == slot.index;
+    final isFilledCorrect = _engine!.isCompleted;
+
+    Color slotBg;
+    if (isFilledCorrect) {
+      slotBg = isDark ? const Color(0xFF064E3B) : const Color(0xFFD1FAE5);
+    } else if (_isWrongAttempt) {
+      slotBg = AppColors.cellError;
+    } else if (isActive) {
+      slotBg = isDark ? const Color(0xFF3730A3) : AppColors.cellSelectedLight;
+    } else {
+      slotBg = isDark ? AppColors.nightCell : Colors.white;
+    }
+
+    Color borderColor;
+    if (isFilledCorrect) {
+      borderColor = AppColors.mint;
+    } else if (_isWrongAttempt) {
+      borderColor = AppColors.coral;
+    } else if (isActive) {
+      borderColor = AppColors.primary;
+    } else {
+      borderColor = isDark ? Colors.white24 : Colors.black26;
+    }
+
+    return GestureDetector(
+      onTap: () {
+        setState(() => _engine!.selectSlot(slot.index));
+        _requestKeyboardFocus();
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        width: 38,
+        height: 48,
+        decoration: BoxDecoration(
+          color: slotBg,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: borderColor,
+            width: (isActive || _isWrongAttempt || isFilledCorrect) ? 2.0 : 1.0,
+          ),
+          boxShadow: const [
+            BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 1)),
+          ],
+        ),
+        child: Center(
+          child: Text(
+            slot.guess,
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: isFilledCorrect
+                  ? (isDark ? Colors.white : const Color(0xFF065F46))
+                  : (isDark ? Colors.white : AppColors.ink),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWordRows(bool isDark) {
+    final words = _getWordSlots();
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        for (int w = 0; w < words.length; w++) ...[
+          if (w > 0) const SizedBox(height: 10.0),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.center,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                for (int i = 0; i < words[w].length; i++) ...[
+                  if (i > 0) const SizedBox(width: 6.0),
+                  _buildSlotItem(words[w][i], isDark),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading || _engine == null) {
@@ -682,83 +809,8 @@ class _RebusScreenState extends State<RebusScreen> with WidgetsBindingObserver {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    // Letter Slots (Tap slot to focus and type)
-                    Wrap(
-                      alignment: WrapAlignment.center,
-                      spacing: 6.0,
-                      runSpacing: 8.0,
-                      children: List.generate(_engine!.slots.length, (i) {
-                        final slot = _engine!.slots[i];
-                        if (slot.isSeparator) {
-                          return const SizedBox(
-                            width: 16,
-                            height: 48,
-                            child: Center(
-                              child: Text(' ', style: TextStyle(fontSize: 20)),
-                            ),
-                          );
-                        }
-                        final isActive = _engine!.activeIndex == i;
-                        final isFilledCorrect = _engine!.isCompleted;
-
-                        Color slotBg;
-                        if (isFilledCorrect) {
-                          slotBg = isDark ? const Color(0xFF064E3B) : const Color(0xFFD1FAE5);
-                        } else if (_isWrongAttempt) {
-                          slotBg = AppColors.cellError;
-                        } else if (isActive) {
-                          slotBg = isDark ? const Color(0xFF3730A3) : AppColors.cellSelectedLight;
-                        } else {
-                          slotBg = isDark ? AppColors.nightCell : Colors.white;
-                        }
-
-                        Color borderColor;
-                        if (isFilledCorrect) {
-                          borderColor = AppColors.mint;
-                        } else if (_isWrongAttempt) {
-                          borderColor = AppColors.coral;
-                        } else if (isActive) {
-                          borderColor = AppColors.primary;
-                        } else {
-                          borderColor = isDark ? Colors.white24 : Colors.black26;
-                        }
-
-                        return GestureDetector(
-                          onTap: () {
-                            setState(() => _engine!.selectSlot(i));
-                            _requestKeyboardFocus();
-                          },
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 150),
-                            width: 38,
-                            height: 48,
-                            decoration: BoxDecoration(
-                              color: slotBg,
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: borderColor,
-                                width: (isActive || _isWrongAttempt || isFilledCorrect) ? 2.0 : 1.0,
-                              ),
-                              boxShadow: const [
-                                BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 1)),
-                              ],
-                            ),
-                            child: Center(
-                              child: Text(
-                                slot.guess,
-                                style: TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.bold,
-                                  color: isFilledCorrect
-                                      ? (isDark ? Colors.white : const Color(0xFF065F46))
-                                      : (isDark ? Colors.white : AppColors.ink),
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
-                      }),
-                    ),
+                    // Letter Slots (Each word on its own dedicated row)
+                    _buildWordRows(isDark),
                     const SizedBox(height: 24),
                     // Hint Shop Button
                     OutlinedButton.icon(

@@ -190,6 +190,20 @@ All key technical, product, and design decisions are logged here with rationale 
 - **Why**: Replaces the default Flutter framework icon with a distinctive, professional brand identity tailored for anime and movie trivia fans.
 - **Owner Action Required**: None. Check out the icon on device!
 
+---
+
+## Decision 017: Dedicated Per-Word Slot Rows in Emoji Rebus Mode
+- **Date**: 2026-10-28
+- **Status**: Adopted
+- **Decision**: Refactored the slot layout in `lib/ui/screens/rebus_screen.dart` from a flat `Wrap` of individual boxes into a vertical `Column` of dedicated word rows:
+  1. Grouped all slots by word based on space delimiters (`_getWordSlots()`).
+  2. Rendered each word in its own centered row (`_buildWordRows()`).
+  3. Wrapped each word row in `FittedBox(fit: BoxFit.scaleDown)` to guarantee long titles fit cleanly without horizontal overflow on smaller screens.
+  4. Rendered punctuation marks (hyphens, colons, apostrophes) directly in-line as fixed non-editable characters.
+- **Why**: Requested by the owner (David). In multi-word titles such as *Jujutsu Kaisen*, the old flat `Wrap` broke words mid-word across lines (e.g. `[J][U][J][U][T][S][U] [K][A]` on line 1, `[I][S][E][N]` on line 2), confusing players about word boundaries. One dedicated row per word makes the structure immediately clear and intuitive.
+- **Owner Action Required**: None. Tested with all 26 tests passing.
+
+
 
 
 
